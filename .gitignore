@@ -1,0 +1,6 @@
+*.bak
+*uvgui*
+*uvopt*
+*bin
+/Objects/*
+/Listings/*
