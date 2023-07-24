@@ -1,238 +1,123 @@
-/******************************************************************************
-
-                  °æÈ¨ËùÓĞ (C), 2019, ±±¾©µÏÎÄ¿Æ¼¼ÓĞÏŞ¹«Ë¾
-
- ******************************************************************************
-  ÎÄ ¼ş Ãû   : timer.c
-  °æ ±¾ ºÅ   : V1.0
-  ×÷    Õß   : chenmeishu
-  Éú³ÉÈÕÆÚ   : 2019.9.2
-  ¹¦ÄÜÃèÊö   : ÊµÏÖÁË¶¨Ê±Æ÷    Ó²¼ş¶¨Ê±Æ÷0    ÊµÏÖÁË8¸öÈí¶¨Ê±Æ÷
-  ĞŞ¸ÄÀúÊ·   :
-  1.ÈÕ    ÆÚ   : 
-    ×÷    Õß   : 
-    ĞŞ¸ÄÄÚÈİ   : 
-******************************************************************************/
 #include "timer.h"
+#include "logic/inc/driver/bits.h"
+#include "logic/inc/driver/interrupt.h"
 
-//×¢Òâ£º½ûÖ¹Ë½×Ô·ÃÎÊÕâĞ©±äÁ¿£¬Ö»ÄÜÓÃ½Ó¿Úº¯Êı·ÃÎÊ
-//u8  EnableTimer;   //8¸öÈí¶¨Ê±Æ÷ÊÇ·ñÊ¹ÄÜ
-//u8  OutTimeFlag;   //8¸öÈí¶¨Ê±Æ÷ÊÇ·ñ³¬Ê±
-//u32 TimerTime[8];  //8¸öÈí¶¨Ê±Æ÷¶¨Ê±Ê±¼ä
+#define TIMER__MODE_TIMER_0(flags) ((flags) << 0)
+#define TIMER__MODE_TIMER_1(flags) ((flags) << 4)
 
-//×¢Òâ£º½ûÖ¹Ë½×Ô·ÃÎÊÕâĞ©±äÁ¿£¬Ö»ÄÜÓÃ½Ó¿Úº¯Êı·ÃÎÊ
-u8 data EnableTimer;   //8¸öÈí¶¨Ê±Æ÷ÊÇ·ñÊ¹ÄÜ
-u8 data OutTimeFlag;   //8¸öÈí¶¨Ê±Æ÷ÊÇ·ñ³¬Ê±
-u16 data TimerTime[8];  //8¸öÈí¶¨Ê±Æ÷¶¨Ê±Ê±¼ä
-u8 data SysTick;
-
-/*****************************************************************************
- º¯ Êı Ãû  : void T0_Init(void)
- ¹¦ÄÜÃèÊö  : ¶¨Ê±Æ÷0³õÊ¼»¯	¶¨Ê±¼ä¸ô1ms
- ÊäÈë²ÎÊı  :	 
- Êä³ö²ÎÊı  : 
- ĞŞ¸ÄÀúÊ·  :
-  1.ÈÕ    ÆÚ   : 2019Äê9ÔÂ2ÈÕ
-    ×÷    Õß   :  ³ÂÃÀÊé
-    ĞŞ¸ÄÄÚÈİ   : ´´½¨
-*****************************************************************************/
-//¶¨Ê±Æ÷Ê±ÖÓÎªÏµÍ³Ê±ÖÓµÄ12·ÖÆµ£¬×î´óÄÜÉè¶¨µ½3.8ms
-//¼ÆËã¹«Ê½Îª(65536-n*FOSC/12),ÆäÖĞnµÄµ¥Î»ÎªÃë
-void T0_Init(void)
+typedef enum Timer_Mode
 {
-	  TMOD=0x11;          //16Î»¶¨Ê±Æ÷
-    //T0
-    TH0=0x00;
-    TL0=0x00;
-    TR0=0x00;
-	
-	  OutTimeFlag=0;
-	  EnableTimer=0;
-	
-    TMOD|=0x01;
-    TH0=T1MS>>8;        //1ms¶¨Ê±Æ÷
-    TL0=T1MS;
-    ET0=1;              //¿ªÆô¶¨Ê±Æ÷0ÖĞ¶Ï
-//    EA=1;               //¿ª×ÜÖĞ¶Ï
-    TR0=1;              //¿ªÆô¶¨Ê±Æ÷
+  Timer_Mode_13bit
+  , Timer_Mode_16Bit
+  , Timer_Mode_8BitAutoReload
+  , Timer_Mode_Double8BitTimer
+  , Timer_Mode_Counter = Bits_Bit8_2
+  , Timer_Mode_Gate = Bits_Bit8_3
+} Timer_Mode_t;
+
+u32 data Timer_Tick = 0;
+
+//×¢Ó¢ÃºŞ»Ö¹Ë½Ø”ØƒÏŠÖ¢Ğ©Ò¤Ã¬Ö»ÅœÔƒŞ“à šÚ¯Ë½ØƒÏŠ
+u8 data Timer_EnableFlags;   //8Ù¶É­Ö¨Ê±Ç·Ë‡Ø±Ê¹Åœ
+u8 data Timer_TimeoutFlags;   //8Ù¶É­Ö¨Ê±Ç·Ë‡Ø±Ó¬Ê±
+u16 data Timer_Durations[8];  //8Ù¶É­Ö¨Ê±Ç·Ö¨Ê±Ê±İ¤
+
+static void Timer_setTimer0(u16 value);
+static void Timer_startTimer0(void);
+static void Timer_stopTimer0(void);
+static void Timer_handleInterruption(void);
+
+void Timer_init(void)
+{
+  TMOD = (
+    TIMER__MODE_TIMER_0(Timer_Mode_16Bit)
+    | TIMER__MODE_TIMER_1(Timer_Mode_16Bit)
+  );
+
+  Timer_setTimer0(0);
+  Timer_stopTimer0();
+
+  Timer_TimeoutFlags = 0;
+  Timer_EnableFlags = 0;
+
+  TMOD |= TIMER__MODE_TIMER_0(Timer_Mode_16Bit);
+  Timer_setTimer0(T1MS);
+
+  Interrupt_Timer0Handler = Timer_handleInterruption;
+  
+  Interrupt_enableInterruption(Interrupt_Interruption_Timer0);
+  
+  Timer_startTimer0();
 }
-/*****************************************************************************
- º¯ Êı Ãû  : void T0_ISR_PC(void)    interrupt 1
- ¹¦ÄÜÃèÊö  : ¶¨Ê±Æ÷0´¦Àíº¯Êı£¬ºÁÃëÔö¼Ó
- ÊäÈë²ÎÊı  :	 
- Êä³ö²ÎÊı  : 
- ĞŞ¸ÄÀúÊ·  :
-  1.ÈÕ    ÆÚ   : 2019Äê9ÔÂ2ÈÕ
-    ×÷    Õß   : ³ÂÃÀÊé
-    ĞŞ¸ÄÄÚÈİ   : ´´½¨
-*****************************************************************************/
-void T0_ISR_PC(void)    interrupt 1
+
+void Timer_handleInterruption(void)
 {
-	 u8 data i;
-	
-    EA=0;
-    TH0=T1MS>>8;
-    TL0=T1MS;
-		SysTick++;
-		for(i=0;i<8;i++)
-		{
-			if(EnableTimer&(0x01<<i))
-			{
-				TimerTime[i]--;
-				if(TimerTime[i]==0)
-				{
-					OutTimeFlag |= 0x01<<i;
-					EnableTimer &= ~(0x01<<i); 					 
-				}
-			}
-		}
-    EA=1;
+  u8 interrupt_flag = Interrupt_enabled();
+  u8 data i;
+  Interrupt_disable();
+
+  Timer_setTimer0(T1MS);
+  ++Timer_Tick;
+
+  for(i = 0; i < 8; ++i)
+  {
+    u8 timer_id = 1 << i;
+    if (!(Timer_EnableFlags & timer_id)) continue;
+
+    --Timer_Durations[i];
+    if(Timer_Durations[i] == 0)
+    {
+      Timer_TimeoutFlags |= timer_id;
+      Timer_EnableFlags &= ~timer_id;
+    }
+  }
+
+  Interrupt_restore(interrupt_flag);
 }
-//¶¨Ê±Æ÷Ê±ÖÓÎªÏµÍ³Ê±ÖÓµÄ12·ÖÆµ£¬×î´óÄÜÉè¶¨µ½3.8ms
-//¼ÆËã¹«Ê½Îª(65536-n*FOSC/12),ÆäÖĞnµÄµ¥Î»ÎªÃë
-//void T1_Init(void)
-//{
-//	  TMOD=0x11;          //16Î»¶¨Ê±Æ÷
-//    //T1
-//    TH1=0x00;
-//    TL1=0x00;
-//    TR1=0x00;
-//	
-//    TMOD |= 0x10;
-//    TH1=T1MS>>8;        //1ms¶¨Ê±Æ÷
-//    TL1=T1MS;
-//    ET1=1;              //¿ªÆô¶¨Ê±Æ÷0ÖĞ¶Ï
-//    TR1=1;              //¿ªÆô¶¨Ê±Æ÷
-//}
 
-//void timer1_Isr() interrupt 3
-//{
-//	EA = 0;
-//	TH1=T1MS>>8;
-//  TL1=T1MS;
-//	P10 = !P10;
-//	EA = 1;
-//}
-
-//¶¨Ê±Æ÷Ê±ÖÓÎªÏµÍ³Ê±ÖÓµÄ24·ÖÆµ£¬×î´óÄÜÉè¶¨µ½7.6ms
-//¼ÆËã¹«Ê½Îª(65536-n*FOSC/24),ÆäÖĞnµÄµ¥Î»ÎªÃë
-//void T2_Init(void)
-//{
-//	T2CON = 0xF0;		//Ñ¡Ôñ24·ÖÆµ
-//	
-//	TH2 = 0x58;
-//	TL2 = 0x00;
-//	TRL2H = 0x58;
-//	TRL2L = 0x00;		//¶¨Ê±5ms
-//	T2CON |= 0x01;	//Æô¶¯¶¨Ê±Æ÷
-//	ET2 = 1;			  //´ò¿ª¶¨Ê±Æ÷2ÖĞ¶Ï		
-//}
-
-//void timer2_Isr() interrupt 5
-//{
-//	EA = 0;
-//	TF2 = 0;
-//	P11 = !P11;
-//	EA = 1;
-//}
-
-
-/*****************************************************************************
- º¯ Êı Ãû  : void StartTimer(u8 ID, u16 nTime)
- ¹¦ÄÜÃèÊö  : Æô¶¯Ò»¸öÈí¶¨Ê±Æ÷£¬
- ÊäÈë²ÎÊı  :	 u8 ID         ¶¨Ê±Æ÷ID
-               u16 nTime     ¶¨Ê±msÊı
-
- Êä³ö²ÎÊı  : 
- ĞŞ¸ÄÀúÊ·  :
-  1.ÈÕ    ÆÚ   : 2019Äê9ÔÂ2ÈÕ
-    ×÷    Õß   : ³ÂÃÀÊé
-    ĞŞ¸ÄÄÚÈİ   : ´´½¨
-*****************************************************************************/
-void StartTimer(u8 ID, u16 nTime)
+void Timer_start(u8 id, u16 time)
 {
-	  EA=0;
-	  EnableTimer=EnableTimer|(1<<ID);
-	  TimerTime[ID]=nTime;
-	  OutTimeFlag&=~(1<<ID);
-	  EA=1; 
+  u8 interrupt_flag = Interrupt_enabled();
+  u8 timer_id;
+  Interrupt_disable();
+
+  if (7 < id) id = 7;
+  if (time == 0) time = 1;
+  timer_id = 1 << id;
+
+  Timer_EnableFlags |= timer_id;
+  Timer_Durations[id] = time;
+  Timer_TimeoutFlags &= ~timer_id;
+
+  Interrupt_restore(interrupt_flag);
 }
 
 
-/*****************************************************************************
- º¯ Êı Ãû  : void KillTimer(u8 ID)
- ¹¦ÄÜÃèÊö  : Í£Ö¹Ò»¸öÈí¶¨Ê±Æ÷£¬
- ÊäÈë²ÎÊı  :	u8 ID  ¶¨Ê±Æ÷ID
- Êä³ö²ÎÊı  : 
- ĞŞ¸ÄÀúÊ·  :
-  1.ÈÕ    ÆÚ   : 2019Äê9ÔÂ2ÈÕ
-    ×÷    Õß   : ³ÂÃÀÊé
-    ĞŞ¸ÄÄÚÈİ   : ´´½¨
-*****************************************************************************/
-//void KillTimer(u8 ID)
-//{
-//	  EA=0;
-//	  EnableTimer&=~(1<<(ID));
-//	  OutTimeFlag&=~(1<<ID);
-//	  EA=1;
-//}
-
-/*****************************************************************************
- º¯ Êı Ãû  : u8 GetTimeOutFlag(u8 ID)
- ¹¦ÄÜÃèÊö  : »ñµÃ¶¨Ê±Æ÷ÊÇ·ñ³¬Ê±
- ÊäÈë²ÎÊı  :	u8 ID  ¶¨Ê±Æ÷ID
- Êä³ö²ÎÊı  :  0  Î´³¬Ê±    ·Ç0  ³¬Ê±
- ĞŞ¸ÄÀúÊ·  :
-  1.ÈÕ    ÆÚ   : 2019Äê9ÔÂ2ÈÕ
-    ×÷    Õß   : ³ÂÃÀÊé
-    ĞŞ¸ÄÄÚÈİ   : ´´½¨
-*****************************************************************************/
-u8 GetTimeOutFlag(u8 ID)
+u8 Timer_timeout(u8 id)
 {
+  u8 interrupt_flag = Interrupt_enabled();
   u8 flag;
-	EA=0;
-	flag=OutTimeFlag&(1<<ID);
-	EA=1;
+  Interrupt_disable();
+
+  flag = Timer_TimeoutFlags & (1 << id);
+
+  Interrupt_restore(interrupt_flag);
 	return flag;
-	
 }
 
-//#ifdef PWMENABLE
-//u8  EnablePWM;
-//u16 PWMTotal[8];
-//u16 PWMLow[8];
-//u16 PWMTicks[8];
-//u8  PWMPort[8];
-//u8  PWMPin[8];
+void Timer_setTimer0(u16 value)
+{
+  TH0 = (value >> 8) & 0xFF;
+  TL0 = (value >> 0) & 0xFF;
+}
 
-//void StartPWM(u8 PWMID, u16 VPWMTotal,u16 VPWMLow,u8 Port,u8 Pin )
-//{
-//	  EA=0;
-//	  SetPinOut(Port,Pin);
-//	  PWMTicks[PWMID]=0;
-//	  PWMTotal[PWMID]=VPWMTotal;
-//    PWMLow[PWMID]=VPWMLow;
-//    PWMPort[PWMID]=Port;
-//    PWMPin[PWMID]=Pin;	
-//	  EnablePWM|=(1<<PWMID);
-//	  EA=1;
-//}
+void Timer_startTimer0(void)
+{
+  TR0 = 1;
+}
 
-//void StopPWM(u8 PWMID)
-//{
-//	  EA=0;
-//	  EnablePWM&=~(1<<PWMID);	
-//	  PinOutput(PWMPort[PWMID],PWMPin[PWMID],0);
-//	  EA=1;
-//}
+void Timer_stopTimer0(void)
+{
+  TR0 = 0;
+}
 
-//void StopAllPWM()
-//{
-//	 u8 i;
-//	 EnablePWM=0;
-//	 for(i=0;i<8;i++)
-//	{
-//		PinOutput(PWMPort[i],PWMPin[i],0);
-//	}
-//}
-//#endif
