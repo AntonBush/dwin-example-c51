@@ -1,5 +1,12 @@
 #include "app/logic.h"
 
+//
+#include "math.h"
+static float round(float v)
+{
+  return floor(v + 0.5);
+}
+
 static void Logic_updateMainPage(Logic_Data_t *logic);
 
 void Logic_init(Logic_Data_t *logic)
@@ -48,14 +55,14 @@ void Logic_updateMainPage(Logic_Data_t *logic)
     = rx->tank.valve_state == J1939_State_Active
     ? Ui_IconState_Active
     : Ui_IconState_Passive;
-  ui->tank.filling = rx->tank.filling;
+  ui->tank.filling = round(rx->tank.filling);
   ui->tank.temp_bounds.min = rx->tank.temp_bounds.min;
   ui->tank.temp_bounds.max = rx->tank.temp_bounds.max;
   ui->tank.prs_bounds = rx->tank.prs_bounds;
 
-  logic->ui.battery.hv.voltage = logic->rx.pcu1.hv.voltage;
+  logic->ui.battery.hv.voltage = round(logic->rx.pcu1.hv.voltage);
   logic->ui.battery.hv.current = logic->rx.pcu1.hv.current;
-  hv_discharge_power = rx->pcu1.hv.voltage * rx->pcu1.hv.current / 1000;
+  hv_discharge_power = round(rx->pcu1.hv.voltage * rx->pcu1.hv.current / 1000);
   if (hv_discharge_power < 0)
   {
     ui->battery.discharge_power = 0;
@@ -84,7 +91,7 @@ void Logic_updateMainPage(Logic_Data_t *logic)
       ui->battery.tms_state = Ui_TmsState_Circulation;
       break;
   }
-  ui->battery.soc = rx->pcu1.soc;
+  ui->battery.soc = round(rx->pcu1.soc);
   ui->battery.temp_bounds.min
     = rx->pcu2.battery_temp_bounds.min;
   ui->battery.temp_bounds.max
@@ -99,7 +106,7 @@ void Logic_updateMainPage(Logic_Data_t *logic)
       || rx->pcu3.fuel_cell.state == 2
     ? Ui_IconState_Active
     : Ui_IconState_Passive;
-  ui->fuel_cell.output_power = rx->pcu3.fuel_cell.output_power;
+  ui->fuel_cell.output_power = round(rx->pcu3.fuel_cell.output_power);
   ui->fuel_cell.temp = rx->pcu3.fuel_cell.temp;
 
   ui->hed_rate.hydrogen = rx->pcu3.rate.hydrogen;
