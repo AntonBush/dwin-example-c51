@@ -52,7 +52,7 @@ void init(void)
   Can_InitConfig_t can_config;
   Can_AcceptanceFilter_t can_filter;
 
-  sys_init(); // инициализация основных регистров
+  //sys_init(); // инициализация основных регистров
   Timer_init();
 
   // Baud rate:

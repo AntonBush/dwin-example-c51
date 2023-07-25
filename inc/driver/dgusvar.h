@@ -1,7 +1,7 @@
 #ifndef __DGUSVAR_H__
 #define __DGUSVAR_H__
 
-#include "driver/int.h"
+#include "lib/int.h"
 
 #define DGUSVAR__CAN_BASE_ADDRESS_H 0xFF
 #define DGUSVAR__CAN_BASE_ADDRESS_M 0x00

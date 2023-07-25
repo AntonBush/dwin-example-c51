@@ -310,7 +310,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath></IncludePath>
+              <IncludePath>.\driver;.\source;.\inc</IncludePath>
             </VariousControls>
           </C51>
           <Ax51>
@@ -373,11 +373,6 @@
           <GroupName>driver</GroupName>
           <Files>
             <File>
-              <FileName>canbus.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\driver\canbus.c</FilePath>
-            </File>
-            <File>
               <FileName>sys.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\driver\sys.c</FilePath>
@@ -386,6 +381,11 @@
               <FileName>timer.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\driver\timer.c</FilePath>
+            </File>
+            <File>
+              <FileName>canbus.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\driver\canbus.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -405,35 +405,32 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>lib</GroupName>
-        </Group>
-        <Group>
-          <GroupName>Logic</GroupName>
+          <GroupName>logic</GroupName>
           <Files>
-            <File>
-              <FileName>bytevector.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\logic\src\app\bytevector.c</FilePath>
-            </File>
             <File>
               <FileName>canrx.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\logic\src\app\canrx.c</FilePath>
+              <FilePath>.\src\app\canrx.c</FilePath>
             </File>
             <File>
               <FileName>logic.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\logic\src\app\logic.c</FilePath>
+              <FilePath>.\src\app\logic.c</FilePath>
             </File>
             <File>
               <FileName>ui.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\logic\src\app\ui.c</FilePath>
+              <FilePath>.\src\app\ui.c</FilePath>
             </File>
             <File>
               <FileName>dgusvar.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\logic\src\driver\dgusvar.c</FilePath>
+              <FilePath>.\src\driver\dgusvar.c</FilePath>
+            </File>
+            <File>
+              <FileName>bytevector.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\lib\bytevector.c</FilePath>
             </File>
           </Files>
         </Group>

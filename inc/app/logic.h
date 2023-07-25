@@ -1,8 +1,8 @@
 #ifndef __LOGIC_H__
 #define __LOGIC_H__
 
-#include "logic/inc/app/canrx.h"
-#include "logic/inc/app/ui.h"
+#include "app/canrx.h"
+#include "app/ui.h"
 
 #define LOGIC__RX_TIMEOUT 200
 

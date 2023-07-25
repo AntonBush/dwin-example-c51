@@ -1,7 +1,7 @@
-#include "logic/inc/driver/dgusvar.h"
+#include "driver/dgusvar.h"
 
 #include "driver/sys.h"
-#include "logic/inc/driver/interrupt.h"
+#include "driver/interrupt.h"
 
 typedef enum DgusVar_Mode
 {
@@ -152,12 +152,12 @@ void DgusVar_selectBytes(u8 count)
 
 void DgusVar_performOperation(DgusVar_Mode_t mode)
 {
-  u8 interrupt_flag = EA;//Interrupt_enabled();
-  EA = 0;//Interrupt_disable();
+  u8 interrupt_flag = EA; // Interrupt_enabled();
+  EA = 0; // Interrupt_disable();
 
   APP_RW = mode;
   APP_EN = 1;
   while (APP_EN);
 
-  if (interrupt_flag) EA = 1;//Interrupt_restore(interrupt_flag);
+  if (interrupt_flag) EA = 1; // Interrupt_restore(interrupt_flag);
 }

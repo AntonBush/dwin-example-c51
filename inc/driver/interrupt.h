@@ -1,8 +1,8 @@
 #ifndef __INTERRUPT_H__
 #define __INTERRUPT_H__
 
-#include "driver/int.h"
-#include "logic/inc/driver/bits.h"
+#include "lib/int.h"
+#include "lib/bits.h"
 
 typedef enum Interrupt_Type
 {

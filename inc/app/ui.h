@@ -1,8 +1,8 @@
 #ifndef __UI_H__
 #define __UI_H__
 
-#include "driver/int.h"
-#include "logic/inc/app/bounds.h"
+#include "lib/int.h"
+#include "lib/bounds.h"
 
 typedef enum Ui_IconState
 {

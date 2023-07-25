@@ -4,3 +4,4 @@
 *bin
 /Objects/*
 /Listings/*
+!.gitkeep

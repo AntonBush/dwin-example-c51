@@ -2,7 +2,7 @@
 #define __SYS_H__
 
 #include "device/board.h"
-#include "driver/int.h"
+#include "lib/int.h"
 
 // определение макросов
 #define WDT_ON()        MUX_SEL|=0x02    // включить сторожевой таймер

@@ -7,9 +7,9 @@
 #define CANRX__PCU_MSG_2_ID 0x18FFAF9D
 #define CANRX__PCU_MSG_3_ID 0x18FED930
 
-#include "logic/inc/app/j1939.h"
-#include "logic/inc/driver/can.h"
-#include "logic/inc/app/bounds.h"
+#include "lib/j1939.h"
+#include "driver/can.h"
+#include "lib/bounds.h"
 
 typedef enum CanRx_SystemStatus
 {

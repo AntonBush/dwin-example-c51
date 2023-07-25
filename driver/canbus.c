@@ -1,7 +1,6 @@
-#include "driver/canbus.h"
-#include "driver/timer.h"
-#include "source/const.h"
-#include "logic/inc/driver/interrupt.h"
+#include "canbus.h"
+#include "timer.h"
+#include "const.h"
 //如果使用CAN，那么sys.h  必须增加如下宏定义  #define INTVPACTION
 
 /*CAN总线位时间参数的设定与调整
@@ -21,8 +20,6 @@
 		同步跳转宽度1~4  尽量大
 
 */
-
-static void Can_handleInterruption(void);
 
 CANBUSUNIT   CanData;
 //125K{0x20,0x20,0xF6,0x00},150K{0x3F,0x40,0x72,0x00},
@@ -76,10 +73,7 @@ void CanBusInit(u8* RegCfg)
 	RAMMODE = 0;
 	CAN_CR = 0xA0;
 	while(CAN_CR&0x20);	//执行配置FF0060-FF0062动作
-
-  Interrupt_CanHandler = Can_handleInterruption;
-
-  Interrupt_enableInterruption(Interrupt_Interruption_Can);//麓蚩獌AN謵露蠅
+	ECAN = 1;			//打开CAN中断	
 }
 
 
@@ -204,17 +198,16 @@ void CanTx(u32 ID, u8 status, u16 len, const u8 *pData)
 	}
 	if(0==CanData.CanTxFlag)
 	{
-		u8 interrupt_flag = Interrupt_enabled();
-    Interrupt_disable();
+		EA = 0;
 		LoadOneFrame();
-		Interrupt_restore(interrupt_flag);
+		EA = 1;
 		CanData.CanTxFlag = 1;
-		Timer_start(7,3000);//3S还未发送出去，则清空发送标记
+		StartTimer(7,3000);//3S还未发送出去，则清空发送标记
 		CAN_CR |= 0x04;		//启动发送
 	}
  	if(CanData.CanTxFlag!=0)
  	{
- 		if(Timer_timeout(7))
+ 		if(GetTimeOutFlag(7))
  		{
  			CanData.CanTxFlag = 0;
  		}
@@ -247,11 +240,11 @@ uint8_t canRxTreat(uint32_t *msgId, uint8_t *msgData)
 	}
 }
 
-void Can_handleInterruption()
+void Can_Isr() interrupt 9
 {
 	u8 status;
-  u8 interrupt_flag = Interrupt_enabled();
-  Interrupt_disable();
+
+	EA = 0;
 	if((CAN_IR&0x80) == 0x80)
 	{
 		CAN_IR &= 0x3F;	//清空远程帧标记位			
@@ -309,7 +302,7 @@ void Can_handleInterruption()
 		{
 			LoadOneFrame();
 			CAN_CR |= 0x04;		//启动发送		
-			Timer_start(7,3000);//3S还未发送出去，则清空发送标记
+			StartTimer(7,3000);//3S还未发送出去，则清空发送标记
 		}
 		else
 		{
@@ -330,7 +323,7 @@ void Can_handleInterruption()
 		CAN_CR |= 0x04;	//重新启动发送	
 	}
 	CAN_ET=0;
-  Interrupt_restore(interrupt_flag);
+	EA = 1;  
 }
 
 

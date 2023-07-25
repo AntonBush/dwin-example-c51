@@ -1,6 +1,6 @@
-#include "logic/inc/app/canrx.h"
+#include "app/canrx.h"
 
-#include "logic/inc/app/bytevector.h"
+#include "lib/bytevector.h"
 
 static void CanRx_recieveVcuMsg(CanRx_VcuMsg_t *rx_data, Can_Message_t message);
 static void CanRx_recieveGasTankData(CanRx_GasTankData_t *rx_data, Can_Message_t message);

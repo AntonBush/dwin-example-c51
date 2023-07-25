@@ -104,9 +104,17 @@
 #define   READ_CARD_ERR     1
 #define   WITHOUT_CARD      2
 #define   DATA_READY        1
-#include "driver/int.h"
+/*
+typedef   signed   char s8;
+typedef   signed	 int  s16;
+typedef   signed   long s32;
+typedef unsigned   char u8;
+typedef unsigned   int  u16;
+typedef unsigned   long u32;
 #define NULL ((void *)0)
-	
+*/
+#include "lib/int.h"
+#include "lib/null.h"
 typedef   signed   char 	int8_t;
 typedef   signed	 int  	int16_t;
 typedef   signed	 long  	int32_t;

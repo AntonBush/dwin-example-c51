@@ -89,7 +89,7 @@ void Timer_handleInterruption(void)
   Timer_setTimer0(T1MS);
   ++Timer_Tick;
 
-  for(i = 1; i < 8; ++i)
+  for(i = 0; i < 8; ++i)
   {
     u8 timer_id = 1 << i;
     if (!(Timer_EnableFlags & timer_id)) continue;

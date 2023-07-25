@@ -1,4 +1,4 @@
-#include "logic/inc/app/bytevector.h"
+#include "lib/bytevector.h"
 
 u32 ByteVector_regularParameter(u8 *vector, u32 bit_size, u32 index)
 {

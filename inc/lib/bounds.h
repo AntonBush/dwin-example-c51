@@ -1,7 +1,7 @@
 #ifndef __BOUNDS_H__
 #define __BOUNDS_H__
 
-#include "driver/int.h"
+#include "lib/int.h"
 
 typedef struct Bounds_U8Bounds
 {

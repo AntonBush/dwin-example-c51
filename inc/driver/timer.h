@@ -1,7 +1,7 @@
 #ifndef __TIMER_H__
 #define __TIMER_H__
 
-#include "int.h"
+#include "lib/int.h"
 
 extern data u32 Timer_Tick;
 

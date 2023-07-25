@@ -1,4 +1,4 @@
-#include "logic/inc/app/logic.h"
+#include "app/logic.h"
 
 static void Logic_updateMainPage(Logic_Data_t *logic);
 
@@ -55,7 +55,7 @@ void Logic_updateMainPage(Logic_Data_t *logic)
 
   logic->ui.battery.hv.voltage = logic->rx.pcu1.hv.voltage;
   logic->ui.battery.hv.current = logic->rx.pcu1.hv.current;
-  hv_discharge_power = rx->pcu1.hv.voltage * rx->pcu1.hv.current;
+  hv_discharge_power = rx->pcu1.hv.voltage * rx->pcu1.hv.current / 1000;
   if (hv_discharge_power < 0)
   {
     ui->battery.discharge_power = 0;

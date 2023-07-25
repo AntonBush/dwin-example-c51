@@ -1,7 +1,7 @@
-#include "logic/inc/app/ui.h"
+#include "app/ui.h"
 
-#include "logic/inc/app/vpmap.h"
-#include "logic/inc/driver/dgusvar.h"
+#include "app/vpmap.h"
+#include "driver/dgusvar.h"
 
 void Ui_init(Ui_MainPage_t *page)
 {

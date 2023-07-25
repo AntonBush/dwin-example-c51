@@ -1,7 +1,7 @@
-#include "logic/inc/driver/interrupt.h"
+#include "driver/interrupt.h"
 
 #include "driver/sys.h"
-#include "logic/inc/driver/null.h"
+#include "lib/null.h"
 
 typedef enum Interrupt_State
 {

@@ -1,7 +1,7 @@
 #ifndef __CAN_H__
 #define __CAN_H__
 
-#include "driver/int.h"
+#include "lib/int.h"
 
 typedef struct Can_Message
 {

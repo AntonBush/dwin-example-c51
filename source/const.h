@@ -1,6 +1,6 @@
 #ifndef __CONST_H__
 #define __CONST_H__
-#include "driver/sys.h"
+#include "sys.h"
 
 extern u16 num[50];
 extern u8 canid[2];

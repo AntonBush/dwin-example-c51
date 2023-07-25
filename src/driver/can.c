@@ -50,6 +50,12 @@ void Can_init(Can_InitConfig_t config, Can_AcceptanceFilter_t filter)
 {
   DgusVar_Message_t message;
 
+  Can_CanBus.rx.head = 0;
+  Can_CanBus.rx.tail = 0;
+  Can_CanBus.tx.head = 0;
+  Can_CanBus.tx.tail = 0;
+  Can_CanBus.tx_flag = 0;
+
   Can_resetControl();
 
   Pio_setPinModes(Pio_Port_CanTx, Pio_Pin_CanTx, Pio_PinMode_Out);
@@ -374,10 +380,10 @@ void Can_loadTxMessage(void)
   message.content.bytes[3] = 0;
   DgusVar_write(message);
 
-  message.content.bytes[0] = (u8) (Can_CanBus.tx.messages[Can_CanBus.tx.tail].id >> 24);
-  message.content.bytes[1] = (u8) (Can_CanBus.tx.messages[Can_CanBus.tx.tail].id >> 16);
-  message.content.bytes[2] = (u8) (Can_CanBus.tx.messages[Can_CanBus.tx.tail].id >>  8);
-  message.content.bytes[3] = (u8) (Can_CanBus.tx.messages[Can_CanBus.tx.tail].id >>  0);
+  message.content.bytes[0] = (u8) (can_message->id >> 24);
+  message.content.bytes[1] = (u8) (can_message->id >> 16);
+  message.content.bytes[2] = (u8) (can_message->id >>  8);
+  message.content.bytes[3] = (u8) (can_message->id >>  0);
   DgusVar_continueWrite(message.length, message.content);
 
   for (i = 0; i < 4; ++i) message.content.bytes[i] = can_message->bytes[i];
@@ -400,6 +406,11 @@ void Can_moveBufferHead(Can_BusBuffer_t *buffer)
 {
   buffer->head += 1;
   buffer->head %= CAN__BUFFER_SIZE;
+
+  if (buffer->head == buffer->tail)
+  {
+    Can_moveBufferTail(buffer);
+  }
 }
 
 void Can_moveBufferTail(Can_BusBuffer_t *buffer)
