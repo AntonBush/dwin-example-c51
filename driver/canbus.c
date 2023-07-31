@@ -1,16 +1,21 @@
 #include "canbus.h"
-#include "timer.h"
-#include "const.h"
 
-CANBUSUNIT   CanData;
+#include "timer.h"
+#include "sys.h"
+
+static xdata Can_Bus_t Can_Bus;
+
 //125K{0x20,0x20,0xF6,0x00},150K{0x3F,0x40,0x72,0x00},
 //125K{0x3F,0x40,0x72,0x00},250K{0x1F,0x40,0x72,0x00},500K{0x0F,0x40,0x72,0x00},1M{0x07,0x40,0x72,0x00}
-void CanBusInit(u8* RegCfg)
+void Can_init(
+  const Can_InitConfig_t *config
+  , const Can_AcceptanceFilter_t *filter
+)
 {
   SetPinOut(0,2);
   SetPinIn(0,3);
   PinOutput(0,2,1);
-  MUX_SEL |= 0x80;
+  MUX_SEL |= Bits_Bit8_7;
   ADR_H = 0xFF;
   ADR_M = 0x00;
   ADR_L = 0x60;
@@ -23,10 +28,10 @@ void CanBusInit(u8* RegCfg)
   DATA1 = 0x72;
   DATA0 = 0x00;
   #else
-  DATA3 = RegCfg[0];
-  DATA2 = RegCfg[1];
-  DATA1 = RegCfg[2];
-  DATA0 = RegCfg[3];
+  DATA3 = config->baud_rate_frequency_divider;
+  DATA2 = config->BTR0;
+  DATA1 = config->BTR1;
+  DATA0 = 0;
   #endif
   APP_EN = 1;
   while(APP_EN);
@@ -34,89 +39,89 @@ void CanBusInit(u8* RegCfg)
 //  DATA2 = 0;
 //  DATA1 = 0x42;
 //  DATA0 = 0xc7;
-  DATA3 = 0;
-  DATA2 = 0;
-  DATA1 = 0;
-  DATA0 = 0;
+  // 0x 00 00 00 00
+  DATA3 = filter->acceptance_code[0];
+  DATA2 = filter->acceptance_code[1];
+  DATA1 = filter->acceptance_code[2];
+  DATA0 = filter->acceptance_code[3];
   APP_EN = 1;
   while(APP_EN);
 //  DATA3 = 0x77;
 //  DATA2 = 0xff;
 //  DATA1 = 0xbd;
 //  DATA0 = 0x00;
-  DATA3 = 0xFF;
-  DATA2 = 0xFF;
-  DATA1 = 0xFF;
-  DATA0 = 0xFF;
+  // 0x FF FF FF FF
+  DATA3 = filter->acceptance_mask[0];
+  DATA2 = filter->acceptance_mask[1];
+  DATA1 = filter->acceptance_mask[2];
+  DATA0 = filter->acceptance_mask[3];
   APP_EN = 1;
   while(APP_EN);
   RAMMODE = 0;
-  CAN_CR = 0xA0;
-  while(CAN_CR&0x20);
+  CAN_CR = Bits_Bit8_7 | Bits_Bit8_5;
+  while(CAN_CR & Bits_Bit8_5);
   ECAN = 1;
 }
 
-
-void CanErrorReset(void)
+void Can_resetError(void) small
 {
-  // EA=0;
-  if(CAN_ET&0X20)
-  {
-    CAN_ET &= 0XDF;
-    CAN_CR |= 0X40;
-    Timer_start(6, 1);
-    while(!Timer_timeout(6));
-    CAN_CR &= 0XBF;
-    CanData.CanTxFlag = 0;
-  }
-  // EA=1;
+  if (!(CAN_ET & Bits_Bit8_5)) return;
+
+  CAN_ET &= ~Bits_Bit8_5;
+
+  CAN_CR |= Bits_Bit8_6;
+  Timer_start(6, 1);
+  while(!Timer_timeout(6));
+  CAN_CR &= ~Bits_Bit8_6;
+
+  Can_Bus.tx_flag = Bits_State_NotSet;
 }
 
-
-void LoadOneFrame(void)
+void LoadOneFrame(void) small
 {
+  Can_Message_t *tx_message = Can_Bus.tx + Can_Bus.tx.tail;
   ADR_H = 0xFF;
   ADR_M = 0x00;
   ADR_L = 0x64;
   ADR_INC = 1;
   RAMMODE = 0x8F;
   while(!APP_ACK);
-  DATA3 = CanData.BusTXbuf[CanData.CanTxTail].status;
+  DATA3 = tx_message->status;
   DATA2 = 0;
   DATA1 = 0;
   DATA0 = 0;
   APP_EN = 1;
   while(APP_EN);
-  DATA3 = (u8)(CanData.BusTXbuf[CanData.CanTxTail].ID>>24);
-  DATA2 = (u8)(CanData.BusTXbuf[CanData.CanTxTail].ID>>16);
-  DATA1 = (u8)(CanData.BusTXbuf[CanData.CanTxTail].ID>>8);
-  DATA0 = (u8)(CanData.BusTXbuf[CanData.CanTxTail].ID);
+  DATA3 = tx_message->id >> 24;
+  DATA2 = tx_message->id >> 16;
+  DATA1 = tx_message->id >>  8;
+  DATA0 = tx_message->id >>  0;
   APP_EN = 1;
   while(APP_EN);
-  DATA3 = CanData.BusTXbuf[CanData.CanTxTail].candata[0];
-  DATA2 = CanData.BusTXbuf[CanData.CanTxTail].candata[1];
-  DATA1 = CanData.BusTXbuf[CanData.CanTxTail].candata[2];
-  DATA0 = CanData.BusTXbuf[CanData.CanTxTail].candata[3];
+  DATA3 = tx_message->bytes[0];
+  DATA2 = tx_message->bytes[1];
+  DATA1 = tx_message->bytes[2];
+  DATA0 = tx_message->bytes[3];
   APP_EN = 1;
   while(APP_EN);
-  DATA3 = CanData.BusTXbuf[CanData.CanTxTail].candata[4];
-  DATA2 = CanData.BusTXbuf[CanData.CanTxTail].candata[5];
-  DATA1 = CanData.BusTXbuf[CanData.CanTxTail].candata[6];
-  DATA0 = CanData.BusTXbuf[CanData.CanTxTail].candata[7];
+  DATA3 = tx_message->bytes[4];
+  DATA2 = tx_message->bytes[5];
+  DATA1 = tx_message->bytes[6];
+  DATA0 = tx_message->bytes[7];
   APP_EN = 1;
   while(APP_EN);
-  CanData.CanTxTail++;
+  Can_Bus.tx.tail += 1;
   RAMMODE = 0;
 }
 
-void CanTx(u32 ID, u8 status, u16 len, const u8 *pData)
+void Can_tx(const Can_Message_t *message, u16 length) compact
 {
   u8 i,j,k,framnum,framoffset;
   u32 idtmp,statustmp;
 
-  if(len>2048)
+  if(length > 2048)
     return;
-  if(status&0x80)
+  if(status & Bits_Bit8_7)
   {
     idtmp = ID << 3;
   }
@@ -124,88 +129,79 @@ void CanTx(u32 ID, u8 status, u16 len, const u8 *pData)
   {
     idtmp = ID << 21;
   }
-  if(CanData.BusTXbuf[CanData.CanTxHead].status&0x40)
+  if(Can_Bus.tx[Can_Bus.tx.head].status & Bits_Bit8_6)
   {
-    CanData.BusTXbuf[CanData.CanTxHead].ID = idtmp;
-    CanData.BusTXbuf[CanData.CanTxHead].status = status&0xC0;
-    CanData.CanTxHead++;
+    Can_Bus.tx[Can_Bus.tx.head].ID = idtmp;
+    Can_Bus.tx[Can_Bus.tx.head].status = status & (Bits_Bit8_7 | Bits_Bit8_6);
+    Can_Bus.tx.head += 1;
   }
   else
   {
     framnum = len >> 3;
     framoffset = len % 8;
-    k=0;
-    statustmp = status&0xC0;
-    for(i=0;i<framnum;i++)
+    k = 0;
+    statustmp = status & (Bits_Bit8_7 | Bits_Bit8_6);
+    for(i = 0; i < framnum; ++i)
     {
-      CanData.BusTXbuf[CanData.CanTxHead].ID = idtmp;
-      CanData.BusTXbuf[CanData.CanTxHead].status = statustmp | 0x08;
-      for(j=0;j<8;j++)
+      Can_Bus.tx[Can_Bus.tx.head].ID = idtmp;
+      Can_Bus.tx[Can_Bus.tx.head].status = statustmp | Bits_Bit8_3;
+      for(j = 0; j < 8; ++j)
       {
-        CanData.BusTXbuf[CanData.CanTxHead].candata[j] = pData[k];
+        Can_Bus.tx[Can_Bus.tx.head].candata[j] = pData[k];
         k++;
       }
-      CanData.CanTxHead++;
+      Can_Bus.tx.head += 1;
     }
     if(framoffset)
     {
-      CanData.BusTXbuf[CanData.CanTxHead].ID = idtmp;
-      CanData.BusTXbuf[CanData.CanTxHead].status = statustmp | framoffset;
+      Can_Bus.tx[Can_Bus.tx.head].ID = idtmp;
+      Can_Bus.tx[Can_Bus.tx.head].status = statustmp | framoffset;
       for(j=0;j<framoffset;j++)
       {
-        CanData.BusTXbuf[CanData.CanTxHead].candata[j] = pData[k];
+        Can_Bus.tx[Can_Bus.tx.head].candata[j] = pData[k];
         k++;
       }
       for(;j<8;j++)
-        CanData.BusTXbuf[CanData.CanTxHead].candata[j] = 0;
-      CanData.CanTxHead++;
+        Can_Bus.tx[Can_Bus.tx.head].candata[j] = 0;
+      Can_Bus.tx.head++;
     }
   }
-  if(0==CanData.CanTxFlag)
+  if(0==Can_Bus.tx_flag)
   {
     EA = 0;
     LoadOneFrame();
     EA = 1;
-    CanData.CanTxFlag = 1;
+    Can_Bus.tx_flag = 1;
     Timer_start(7,3000);
     CAN_CR |= 0x04;
   }
-   if(CanData.CanTxFlag!=0)
+   if(Can_Bus.tx_flag!=0)
    {
      if(Timer_timeout(7))
      {
-       CanData.CanTxFlag = 0;
+       Can_Bus.tx_flag = 0;
      }
    }
 }
 
-
-u8 canRxTreat(u32 *msgId, u8 *msgData)
+void Can_rx(Can_Message_t *message) compact
 {
-  u8 sendbuf[30];
-  u16 test;
   u8 i;
+  Can_Message_t *rx_message = Can_Bus.rx.messages + Can_Bus.rx.tail;
 
-  if (CanData.CanRxHead != CanData.CanRxTail)
+  if (Can_Bus.rx.head == Can_Bus.rx.tail)
   {
-    *msgId = (u32)CanData.BusRXbuf[CanData.CanRxTail].ID;
-
-    for (i = 0; i < 8; i++)
-    {
-      msgData[i] = CanData.BusRXbuf[CanData.CanRxTail].candata[i];
-    }
-
-    CanData.CanRxTail = (CanData.CanRxTail + 1) % CANBUFFSIZE;
-
-    return 0x01;
+    message->status = 0;
   }
-  else
-  {
-    return 0x00;
-  }
+
+  (*message) = rx_message;
+  message->status = 1;
+
+  Can_Bus.rx.tail += 1;
+  Can_Bus.rx.tail %= CAN__BUFFER_SIZE;
 }
 
-void Can_Isr() interrupt 9
+void Can_handleInterruption(void) small interrupt 9
 {
   u8 status;
 
@@ -226,44 +222,44 @@ void Can_Isr() interrupt 9
     APP_EN = 1;
     while(APP_EN);
     status = DATA3;
-    CanData.BusRXbuf[CanData.CanRxHead].status = status;
+    Can_Bus.BusRXbuf[Can_Bus.rx.head].status = status;
     APP_EN = 1;
     while(APP_EN);
-    CanData.BusRXbuf[CanData.CanRxHead].ID <<= 8;
-    CanData.BusRXbuf[CanData.CanRxHead].ID |= DATA3;
-    CanData.BusRXbuf[CanData.CanRxHead].ID <<= 8;
-    CanData.BusRXbuf[CanData.CanRxHead].ID |= DATA2;
-    CanData.BusRXbuf[CanData.CanRxHead].ID <<= 8;
-    CanData.BusRXbuf[CanData.CanRxHead].ID |= DATA1;
-    CanData.BusRXbuf[CanData.CanRxHead].ID <<= 8;
-    CanData.BusRXbuf[CanData.CanRxHead].ID |= DATA0;
-    CanData.BusRXbuf[CanData.CanRxHead].ID=CanData.BusRXbuf[CanData.CanRxHead].ID>>3;
+    Can_Bus.BusRXbuf[Can_Bus.rx.head].ID <<= 8;
+    Can_Bus.BusRXbuf[Can_Bus.rx.head].ID |= DATA3;
+    Can_Bus.BusRXbuf[Can_Bus.rx.head].ID <<= 8;
+    Can_Bus.BusRXbuf[Can_Bus.rx.head].ID |= DATA2;
+    Can_Bus.BusRXbuf[Can_Bus.rx.head].ID <<= 8;
+    Can_Bus.BusRXbuf[Can_Bus.rx.head].ID |= DATA1;
+    Can_Bus.BusRXbuf[Can_Bus.rx.head].ID <<= 8;
+    Can_Bus.BusRXbuf[Can_Bus.rx.head].ID |= DATA0;
+    Can_Bus.BusRXbuf[Can_Bus.rx.head].ID=Can_Bus.BusRXbuf[Can_Bus.rx.head].ID>>3;
     if(0==(status&0x80))
     {
-      CanData.BusRXbuf[CanData.CanRxHead].ID >>= 18;
+      Can_Bus.BusRXbuf[Can_Bus.rx.head].ID >>= 18;
     }
     if(0==(status&0x40))
     {
       APP_EN = 1;
       while(APP_EN);
-      CanData.BusRXbuf[CanData.CanRxHead].candata[0] = DATA3;
-      CanData.BusRXbuf[CanData.CanRxHead].candata[1] = DATA2;
-      CanData.BusRXbuf[CanData.CanRxHead].candata[2] = DATA1;
-      CanData.BusRXbuf[CanData.CanRxHead].candata[3] = DATA0;
+      Can_Bus.BusRXbuf[Can_Bus.rx.head].candata[0] = DATA3;
+      Can_Bus.BusRXbuf[Can_Bus.rx.head].candata[1] = DATA2;
+      Can_Bus.BusRXbuf[Can_Bus.rx.head].candata[2] = DATA1;
+      Can_Bus.BusRXbuf[Can_Bus.rx.head].candata[3] = DATA0;
       APP_EN = 1;
       while(APP_EN);
-      CanData.BusRXbuf[CanData.CanRxHead].candata[4] = DATA3;
-      CanData.BusRXbuf[CanData.CanRxHead].candata[5] = DATA2;
-      CanData.BusRXbuf[CanData.CanRxHead].candata[6] = DATA1;
-      CanData.BusRXbuf[CanData.CanRxHead].candata[7] = DATA0;
+      Can_Bus.BusRXbuf[Can_Bus.rx.head].candata[4] = DATA3;
+      Can_Bus.BusRXbuf[Can_Bus.rx.head].candata[5] = DATA2;
+      Can_Bus.BusRXbuf[Can_Bus.rx.head].candata[6] = DATA1;
+      Can_Bus.BusRXbuf[Can_Bus.rx.head].candata[7] = DATA0;
     }
     RAMMODE = 0;
-    CanData.CanRxHead = (CanData.CanRxHead + 1) % CANBUFFSIZE;
+    Can_Bus.rx.head = (Can_Bus.rx.head + 1) % CANBUFFSIZE;
   }
   if((CAN_IR&0x20) == 0x20)
   {
     CAN_IR &= ~(0x20);
-    if(CanData.CanTxTail != CanData.CanTxHead)
+    if(Can_Bus.tx.tail != Can_Bus.tx.head)
     {
       LoadOneFrame();
       CAN_CR |= 0x04;
@@ -271,7 +267,7 @@ void Can_Isr() interrupt 9
     }
     else
     {
-      CanData.CanTxFlag = 0;
+      Can_Bus.tx_flag = 0;
     }
   }
   if((CAN_IR&0x10) == 0x10)

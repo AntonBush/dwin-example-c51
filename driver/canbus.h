@@ -1,47 +1,47 @@
-#ifndef  __CANBUS__H___
-#define  __CANBUS__H___
-//如果使用CAN，那么sys.h  必须增加如下宏定义  #define INTVPACTION
-#include "sys.h"
+#include "lib/int.h"
+#include "lib/bits.h"
 
-typedef struct _candataunit
+typedef struct Can_Message
 {
-	u8 status;   //bit7   IDE  0表示标准帧  1表示扩展帧     bit6 RTR  0表示数据帧，1表示远程帧   bit3_0 发送数据长度，0-8.
-	u32  ID;	  
-	u8   candata[8];
-}CANUNIT;
+  u8 status;
+  u32 id;
+  u8 bytes[8];
+} Can_Message_t;
 
-#define CANBUFFSIZE		256
+#define CAN__BUFFER_SIZE 256
 
-typedef struct _candataunitbuf
+typedef struct Can_BusBuffer
 {
-	CANUNIT BusRXbuf[CANBUFFSIZE];
-	CANUNIT BusTXbuf[CANBUFFSIZE];
-	u8 CanRxHead,CanRxTail;
-	u8 CanTxHead,CanTxTail,CanTxFlag;
-}CANBUSUNIT;
+  Can_Message_t messages[CAN__BUFFER_SIZE];
+  u8 head;
+  u8 tail;
+} Can_BusBuffer_t;
 
-typedef struct _can8283
+typedef struct Can_Bus
 {
-	u8 Busbuf[256];
-	u16 Can8283RxHead,Can8283RxTail;
-}CANBUS8283;
+  Can_BusBuffer_t rx;
+  Can_BusBuffer_t tx;
+  Bits_State_t tx_flag;
+} Can_Bus_t;
 
-extern CANBUSUNIT CanData;
+typedef struct Can_InitConfig
+{
+  u8 baud_rate_frequency_divider;
+  u8 BTR0;
+  u8 BTR1;
+} Can_InitConfig_t;
 
+typedef struct Can_AcceptanceFilter
+{
+  u8 acceptance_code[4];
+  // '0' - match, '1' - ignore
+  u8 acceptance_mask[4];
+} Can_AcceptanceFilter_t;
 
-
-void CanTx(u32 ID, u8 status, u16 len, const u8 *pData);
-void CanBusInit(u8* RegCfg);
-void CanErrorReset(void);
-u8 canRxTreat(u32 *msgId, u8 *msgData);
-#endif
-
-
-
-
-
-
-
-
-
-
+void Can_init(
+  const Can_InitConfig_t *config
+  , const Can_AcceptanceFilter_t *filter
+);
+void Can_resetError(void) small;
+void Can_rx(Can_Message_t *message) compact;
+void Can_tx(const Can_Message_t *message, u16 length) compact;

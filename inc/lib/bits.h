@@ -14,4 +14,10 @@ typedef enum Bits_Bit8
   , Bits_Bit8_7 = 1 << 7
 } Bits_Bit8_t;
 
+typedef enum Bits_State
+{
+  Bits_State_NotSet
+  , Bits_State_Set
+} Bits_State_t;
+
 #endif
