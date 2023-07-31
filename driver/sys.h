@@ -16,12 +16,15 @@
 ******************************************************************************/
 #ifndef __SYS_H__
 #define __SYS_H__
+
 #include "T5LOS8051.h"
+#include "lib/int.h"
 
 #define FOSC     206438400UL
 #define T1MS    (65536-FOSC/12/1000)
 
-#include "lib/int.h"
+#define ENABLE_INTERRUPT() EA = 1
+#define DISABLE_INTERRUPT() EA = 0
 
 void write_dgus_vp(u16 addr,u8* buf,u16 len);
 void read_dgus_vp(u16 addr,u8* buf,u16 len);

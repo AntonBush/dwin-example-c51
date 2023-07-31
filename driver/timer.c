@@ -50,41 +50,52 @@ void Timer_init(void)
 
 void Timer_handleInterruption(void) interrupt 1
 {
-   u8 data i;
+  data u8 i;
 
-    EA=0;
-    TH0=T1MS>>8;
-    TL0=T1MS;
-    Timer_Tick++;
-    for(i=0;i<8;i++)
-    {
-      if(Timer_EnableFlags&(0x01<<i))
-      {
-        Timer_Durations[i]--;
-        if(Timer_Durations[i]==0)
-        {
-          Timer_TimeoutFlags |= 0x01<<i;
-          Timer_EnableFlags &= ~(0x01<<i);
-        }
-      }
-    }
-    EA=1;
+  DISABLE_INTERRUPT();
+
+  Timer_Tick += 1;
+
+  TIMER__SET_TIMER_0(T1MS);
+
+  for(i = 0; i < 8; ++i)
+  {
+    data u8 timer_id = 1 << i;
+    if (!(Timer_EnableFlags & timer_id)) continue;
+
+    Timer_Durations[i] -= 1;
+    if(Timer_Durations[i]) continue;
+
+    Timer_TimeoutFlags |= timer_id;
+    Timer_EnableFlags &= ~timer_id;
+  }
+
+  ENABLE_INTERRUPT();
 }
 
-void Timer_start(u8 ID, u16 nTime)
+void Timer_start(u8 id, u16 time)
 {
-    EA=0;
-    Timer_EnableFlags=Timer_EnableFlags|(1<<ID);
-    Timer_Durations[ID]=nTime;
-    Timer_TimeoutFlags&=~(1<<ID);
-    EA=1;
+  data u8 timer_id = 1 << id;
+
+  DISABLE_INTERRUPT();
+
+  Timer_EnableFlags = Timer_EnableFlags | timer_id;
+  Timer_Durations[id] = time;
+  Timer_TimeoutFlags &= ~timer_id;
+
+  ENABLE_INTERRUPT();
 }
 
-u8 Timer_timeout(u8 ID)
+u8 Timer_timeout(u8 id)
 {
-  u8 flag;
-  EA=0;
-  flag=Timer_TimeoutFlags&(1<<ID);
-  EA=1;
+  data u8 timer_id = 1 << id;
+  data u8 flag;
+
+  DISABLE_INTERRUPT();
+
+  flag = Timer_TimeoutFlags & timer_id;
+
+  ENABLE_INTERRUPT();
+
   return flag;
 }
