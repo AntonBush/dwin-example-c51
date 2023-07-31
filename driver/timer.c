@@ -48,9 +48,9 @@ void Timer_init(void)
   TIMER__START_TIMER_0();
 }
 
-void Timer_handleInterruption(void) interrupt 1
+void Timer_handleInterruption(void) small interrupt 1
 {
-  data u8 i;
+  u8 i;
 
   DISABLE_INTERRUPT();
 
@@ -60,7 +60,7 @@ void Timer_handleInterruption(void) interrupt 1
 
   for(i = 0; i < 8; ++i)
   {
-    data u8 timer_id = 1 << i;
+    u8 timer_id = 1 << i;
     if (!(Timer_EnableFlags & timer_id)) continue;
 
     Timer_Durations[i] -= 1;
@@ -73,9 +73,9 @@ void Timer_handleInterruption(void) interrupt 1
   ENABLE_INTERRUPT();
 }
 
-void Timer_start(u8 id, u16 time)
+void Timer_start(u8 id, u16 time) compact
 {
-  data u8 timer_id = 1 << id;
+  u8 timer_id = 1 << id;
 
   DISABLE_INTERRUPT();
 
@@ -86,10 +86,10 @@ void Timer_start(u8 id, u16 time)
   ENABLE_INTERRUPT();
 }
 
-u8 Timer_timeout(u8 id)
+u8 Timer_timeout(u8 id) compact
 {
-  data u8 timer_id = 1 << id;
-  data u8 flag;
+  u8 timer_id = 1 << id;
+  u8 flag;
 
   DISABLE_INTERRUPT();
 
