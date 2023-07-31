@@ -1,80 +1,90 @@
 #include "timer.h"
 
 #include "sys.h"
+#include "lib/bits.h"
 
-u8 data EnableTimer;   //8个软定时器是否使能
-u8 data OutTimeFlag;   //8个软定时器是否超时
-u16 data TimerTime[8];  //8个软定时器定时时间
-u8 data SysTick;
+#define TIMER__ENABLE_INTERRUPT_TIMER_0() ET0 = 1
 
-/*****************************************************************************
- 函 数 名  : void T0_Init(void)
- 功能描述  : 定时器0初始化	定时间隔1ms
- 输入参数  :	 
- 输出参数  : 
- 修改历史  :
-  1.日    期   : 2019年9月2日
-    作    者   :  陈美书
-    修改内容   : 创建
-*****************************************************************************/
-//定时器时钟为系统时钟的12分频，最大能设定到3.8ms
-//计算公式为(65536-n*FOSC/12),其中n的单位为秒
+#define TIMER__MODE_TIMER_0(flags) ((flags) << 0)
+#define TIMER__MODE_TIMER_1(flags) ((flags) << 4)
+
+#define TIMER__START_TIMER_0() TR0 = 1
+#define TIMER__STOP_TIMER_0() TR0 = 0
+
+#define TIMER__SET_TIMER_0(value) TH0 = (value) >> 8; TL0 = (value)
+
+typedef enum Timer_Mode
+{
+  Timer_Mode_13bit
+  , Timer_Mode_16Bit
+  , Timer_Mode_8BitAutoReload
+  , Timer_Mode_Double8BitTimer
+  , Timer_Mode_Counter = Bits_Bit8_2
+  , Timer_Mode_Gate = Bits_Bit8_3
+} Timer_Mode_t;
+
+data u8 Timer_Tick = 0;
+
+data u8 Timer_EnableFlags;
+data u8 Timer_TimeoutFlags;
+data u16 Timer_Durations[8];
+
 void Timer_init(void)
 {
-	  TMOD=0x11;          //16位定时器
-    //T0
-    TH0=0x00;
-    TL0=0x00;
-    TR0=0x00;
-	
-	  OutTimeFlag=0;
-	  EnableTimer=0;
-	
-    TMOD|=0x01;
-    TH0=T1MS>>8;        //1ms定时器
-    TL0=T1MS;
-    ET0=1;              //开启定时器0中断
-//    EA=1;               //开总中断
-    TR0=1;              //开启定时器
+  TIMER__STOP_TIMER_0();
+
+  Timer_TimeoutFlags = 0;
+  Timer_EnableFlags = 0;
+
+  TMOD = (
+    TIMER__MODE_TIMER_0(Timer_Mode_16Bit)
+    | TIMER__MODE_TIMER_1(Timer_Mode_16Bit)
+  );
+
+  TIMER__SET_TIMER_0(T1MS);
+
+  TIMER__ENABLE_INTERRUPT_TIMER_0();
+
+  TIMER__START_TIMER_0();
 }
 
 void Timer_handleInterruption(void) interrupt 1
 {
-	 u8 data i;
-	
+   u8 data i;
+
     EA=0;
     TH0=T1MS>>8;
     TL0=T1MS;
-		SysTick++;
-		for(i=0;i<8;i++)
-		{
-			if(EnableTimer&(0x01<<i))
-			{
-				TimerTime[i]--;
-				if(TimerTime[i]==0)
-				{
-					OutTimeFlag |= 0x01<<i;
-					EnableTimer &= ~(0x01<<i); 					 
-				}
-			}
-		}
+    Timer_Tick++;
+    for(i=0;i<8;i++)
+    {
+      if(Timer_EnableFlags&(0x01<<i))
+      {
+        Timer_Durations[i]--;
+        if(Timer_Durations[i]==0)
+        {
+          Timer_TimeoutFlags |= 0x01<<i;
+          Timer_EnableFlags &= ~(0x01<<i);
+        }
+      }
+    }
     EA=1;
 }
 
 void Timer_start(u8 ID, u16 nTime)
 {
-	  EA=0;
-	  EnableTimer=EnableTimer|(1<<ID);
-	  TimerTime[ID]=nTime;
-	  OutTimeFlag&=~(1<<ID);
-	  EA=1; 
+    EA=0;
+    Timer_EnableFlags=Timer_EnableFlags|(1<<ID);
+    Timer_Durations[ID]=nTime;
+    Timer_TimeoutFlags&=~(1<<ID);
+    EA=1;
 }
 
 u8 Timer_timeout(u8 ID)
 {
   u8 flag;
-	EA=0;
-	flag=OutTimeFlag&(1<<ID);
-	EA=1;
-	return flag;
+  EA=0;
+  flag=Timer_TimeoutFlags&(1<<ID);
+  EA=1;
+  return flag;
 }

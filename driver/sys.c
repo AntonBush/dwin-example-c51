@@ -1,28 +1,4 @@
-
-/******************************************************************************
-
-                  版权所有 (C), 2019, 北京迪文科技有限公司
-
- ******************************************************************************
-  文 件 名   : sys.c
-  版 本 号   : V1.0
-  作    者   : chenmeishu
-  生成日期   : 2019.9.2
-  功能描述   : 
-  修改历史   :
-  1.日    期   : 
-    作    者   : 
-    修改内容   : 
-******************************************************************************/
 #include "sys.h"
-#include "const.h"
-//MNORFLASH Nor_Flash;
-//MSPIFLASH Spi_Flash;
-//MMUSIC MusicBuf;
-//s16 PosXChangeSpeed,PosYChangeSpeed,RealPosX,RealPosY;
-//s16 xdistance,ydistance,PressPosX,PressPosY,LastPosX,LastPosY;
-//u16 PressPageID;
-//u8 PressPosChange,Touchstate;
 
 /*****************************************************************************
  函 数 名  : void read_dgus_vp(u32 addr,u8* buf,u16 len)

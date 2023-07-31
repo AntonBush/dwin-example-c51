@@ -33,7 +33,7 @@ extern CANBUSUNIT CanData;
 void CanTx(u32 ID, u8 status, u16 len, const u8 *pData);
 void CanBusInit(u8* RegCfg);
 void CanErrorReset(void);
-uint8_t canRxTreat(uint32_t *msgId, uint8_t *msgData);
+u8 canRxTreat(u32 *msgId, u8 *msgData);
 #endif
 
 

@@ -98,7 +98,8 @@ void CanErrorReset(void)
 	{
 		CAN_ET &= 0XDF;
 		CAN_CR |= 0X40;
-		delay_us(1000);
+    Timer_start(6, 1);
+    while(!Timer_timeout(6));
 		CAN_CR &= 0XBF;  
 		CanData.CanTxFlag = 0;
 	}
@@ -215,15 +216,15 @@ void CanTx(u32 ID, u8 status, u16 len, const u8 *pData)
 }
 
 
-uint8_t canRxTreat(uint32_t *msgId, uint8_t *msgData)
+u8 canRxTreat(u32 *msgId, u8 *msgData)
 {
 	u8 sendbuf[30];
 	u16 test;
-	uint8_t i;
+	u8 i;
 	
 	if (CanData.CanRxHead != CanData.CanRxTail)
 	{		
-		*msgId = (uint32_t)CanData.BusRXbuf[CanData.CanRxTail].ID;
+		*msgId = (u32)CanData.BusRXbuf[CanData.CanRxTail].ID;
 		
 		for (i = 0; i < 8; i++)
 		{

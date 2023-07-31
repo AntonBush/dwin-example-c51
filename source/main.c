@@ -9,12 +9,12 @@
 sbit CAN_RLSEL = P0^4;
 
 xdata Logic_Data_t logic;
-xdata uint8_t lifeCounter = 0;
+xdata u8 lifeCounter = 0;
 
 void main()
 {
-	uint32_t msgId = 0;
-	uint8_t msgData[8];
+	u32 msgId = 0;
+	u8 msgData[8];
 
 	u8 canReg[4];
 	Timer_init();			//定时器0初始化
