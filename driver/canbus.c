@@ -202,12 +202,12 @@ void CanTx(u32 ID, u8 status, u16 len, const u8 *pData)
 		LoadOneFrame();
 		EA = 1;
 		CanData.CanTxFlag = 1;
-		StartTimer(7,3000);//3S还未发送出去，则清空发送标记
+		Timer_start(7,3000);//3S还未发送出去，则清空发送标记
 		CAN_CR |= 0x04;		//启动发送
 	}
  	if(CanData.CanTxFlag!=0)
  	{
- 		if(GetTimeOutFlag(7))
+ 		if(Timer_timeout(7))
  		{
  			CanData.CanTxFlag = 0;
  		}
@@ -302,7 +302,7 @@ void Can_Isr() interrupt 9
 		{
 			LoadOneFrame();
 			CAN_CR |= 0x04;		//启动发送		
-			StartTimer(7,3000);//3S还未发送出去，则清空发送标记
+			Timer_start(7,3000);//3S还未发送出去，则清空发送标记
 		}
 		else
 		{
