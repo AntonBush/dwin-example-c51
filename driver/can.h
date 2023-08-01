@@ -47,6 +47,6 @@ void Can_init(
 );
 void Can_resetError(void) small;
 void Can_rx(Can_Message_t *message) compact;
-void Can_tx(u32 id, u8 status, const u8 *bytes, u16 length) compact;
+void Can_tx(u8 status, u32 id, const u8 *bytes, u16 length) compact;
 
 #endif

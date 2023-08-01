@@ -14,7 +14,7 @@ typedef struct Logic_Data
 } Logic_Data_t;
 
 void Logic_init(Logic_Data_t *logic);
-void Logic_rx(Logic_Data_t *logic, Can_Message_t message);
+void Logic_rx(Logic_Data_t *logic, Can_Message_t *message);
 void Logic_update(Logic_Data_t *logic);
 
 #endif

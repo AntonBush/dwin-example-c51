@@ -114,7 +114,7 @@ void LoadOneFrame(void) small
   RAMMODE = 0;
 }
 
-void Can_tx(u32 id, u8 status, const u8 *bytes, u16 length) compact
+void Can_tx(u8 status, u32 id, const u8 *bytes, u16 length) compact
 {
   u8 i,j,k,framnum,framoffset;
   u32 idtmp,statustmp;
@@ -198,6 +198,7 @@ void Can_rx(Can_Message_t *message) compact
   if (Can_Bus.rx.head == Can_Bus.rx.tail)
   {
     message->status = 0;
+    return;
   }
 
   (*message) = (*rx_message);

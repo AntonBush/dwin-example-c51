@@ -16,9 +16,9 @@ void Logic_init(Logic_Data_t *logic)
   Ui_init(&(logic->ui));
 }
 
-void Logic_rx(Logic_Data_t *logic, Can_Message_t message)
+void Logic_rx(Logic_Data_t *logic, Can_Message_t *message)
 {
-  if (message.id == CANRX__VCU_MSG_ID)
+  if (message->id == CANRX__VCU_MSG_ID)
   {
     logic->rx_timeout = LOGIC__RX_TIMEOUT;
   }

@@ -45,7 +45,7 @@ void main()
 //			chabuf[1] = (logic.game.game.on) & 0x01;
 //			chabuf[1] |= ((logic.dashboardParams.pageIndex) & 0x0F) << 4;
 
-			Can_tx(0x111, 0, chabuf, 2);
+			Can_tx(0, 0x111, chabuf, 2);
 			Timer_start(1,500);
 
 			lifeCounter++;
@@ -58,7 +58,7 @@ void main()
 			while (Can_rx(&message), message.status)
 			{
 				//Logic_Rx_Message(&(logic.dashboardParams), &msgId, msgData);
-        Logic_rx(&logic, message);
+        Logic_rx(&logic, &message);
 			}
 
 			Logic_update(&(logic));

@@ -98,6 +98,6 @@ typedef struct CanRx_Data
 } CanRx_Data_t;
 
 void CanRx_init(CanRx_Data_t *rx_data);
-void CanRx_recieve(CanRx_Data_t *rx_data, Can_Message_t message);
+void CanRx_recieve(CanRx_Data_t *rx_data, Can_Message_t *message);
 
 #endif
