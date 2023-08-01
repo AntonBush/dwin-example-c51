@@ -46,7 +46,7 @@ void Can_init(
   , const Can_AcceptanceFilter_t *filter
 );
 void Can_resetError(void) small;
-void Can_rx(Can_Message_t *message) compact;
+u8 Can_rx(Can_Message_t *message) compact;
 void Can_tx(u8 status, u32 id, const u8 *bytes, u16 length) compact;
 
 #endif

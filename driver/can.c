@@ -191,21 +191,20 @@ void Can_tx(u8 status, u32 id, const u8 *bytes, u16 length) compact
    }
 }
 
-void Can_rx(Can_Message_t *message) compact
+u8 Can_rx(Can_Message_t *message) compact
 {
   Can_Message_t *rx_message = Can_Bus.rx.messages + Can_Bus.rx.tail;
 
   if (Can_Bus.rx.head == Can_Bus.rx.tail)
   {
-    message->status = 0;
-    return;
+    return 0;
   }
 
   (*message) = (*rx_message);
-  message->status = 1;
-
   Can_Bus.rx.tail += 1;
   Can_Bus.rx.tail %= CAN__BUFFER_SIZE;
+
+  return 1;
 }
 
 void Can_handleInterruption(void) small interrupt 9
