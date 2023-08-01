@@ -1,3 +1,6 @@
+#ifndef __CAN_H__
+#define __CAN_H__
+
 #include "lib/int.h"
 #include "lib/bits.h"
 
@@ -44,4 +47,6 @@ void Can_init(
 );
 void Can_resetError(void) small;
 void Can_rx(Can_Message_t *message) compact;
-void Can_tx(const Can_Message_t *message, u16 length) compact;
+void Can_tx(u32 id, u8 status, const u8 *bytes, u16 length) compact;
+
+#endif

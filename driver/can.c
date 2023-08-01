@@ -1,4 +1,4 @@
-#include "canbus.h"
+#include "driver/can.h"
 
 #include "timer.h"
 #include "sys.h"
@@ -114,79 +114,85 @@ void LoadOneFrame(void) small
   RAMMODE = 0;
 }
 
-void Can_tx(const Can_Message_t *message, u16 length) compact
+void Can_tx(u32 id, u8 status, const u8 *bytes, u16 length) compact
 {
   u8 i,j,k,framnum,framoffset;
   u32 idtmp,statustmp;
+  Can_Message_t *tx_message;
 
   if(length > 2048)
     return;
+
   if(status & Bits_Bit8_7)
   {
-    idtmp = ID << 3;
+    idtmp = id << 3;
   }
   else
   {
-    idtmp = ID << 21;
+    idtmp = id << 21;
   }
-  if(Can_Bus.tx[Can_Bus.tx.head].status & Bits_Bit8_6)
+
+  tx_message = Can_Bus.tx.messages + Can_Bus.tx.head;
+  if(tx_message->status & Bits_Bit8_6)
   {
-    Can_Bus.tx[Can_Bus.tx.head].ID = idtmp;
-    Can_Bus.tx[Can_Bus.tx.head].status = status & (Bits_Bit8_7 | Bits_Bit8_6);
+    tx_message->id = idtmp;
+    tx_message->status = status & (Bits_Bit8_7 | Bits_Bit8_6);
     Can_Bus.tx.head += 1;
+    tx_message += 1;
   }
   else
   {
-    framnum = len >> 3;
-    framoffset = len % 8;
+    framnum = length >> 3;
+    framoffset = length % 8;
     k = 0;
     statustmp = status & (Bits_Bit8_7 | Bits_Bit8_6);
     for(i = 0; i < framnum; ++i)
     {
-      Can_Bus.tx[Can_Bus.tx.head].ID = idtmp;
-      Can_Bus.tx[Can_Bus.tx.head].status = statustmp | Bits_Bit8_3;
+      tx_message->id = idtmp;
+      tx_message->status = statustmp | Bits_Bit8_3;
       for(j = 0; j < 8; ++j)
       {
-        Can_Bus.tx[Can_Bus.tx.head].candata[j] = pData[k];
-        k++;
+        tx_message->bytes[j] = bytes[k];
+        k += 1;
       }
       Can_Bus.tx.head += 1;
+      tx_message += 1;
     }
     if(framoffset)
     {
-      Can_Bus.tx[Can_Bus.tx.head].ID = idtmp;
-      Can_Bus.tx[Can_Bus.tx.head].status = statustmp | framoffset;
-      for(j=0;j<framoffset;j++)
+      tx_message->id = idtmp;
+      tx_message->status = statustmp | framoffset;
+      for(j = 0; j < framoffset; ++j)
       {
-        Can_Bus.tx[Can_Bus.tx.head].candata[j] = pData[k];
-        k++;
+        tx_message->bytes[j] = bytes[k];
+        k += 1;
       }
-      for(;j<8;j++)
-        Can_Bus.tx[Can_Bus.tx.head].candata[j] = 0;
-      Can_Bus.tx.head++;
+      for(; j < 8; ++j)
+        tx_message->bytes[j] = 0;
+      Can_Bus.tx.head += 1;
+      tx_message += 1;
     }
   }
-  if(0==Can_Bus.tx_flag)
+  if(!Can_Bus.tx_flag)
   {
-    EA = 0;
+    DISABLE_INTERRUPT();
     LoadOneFrame();
-    EA = 1;
-    Can_Bus.tx_flag = 1;
+    ENABLE_INTERRUPT();
+    Can_Bus.tx_flag = Bits_State_Set;
     Timer_start(7,3000);
-    CAN_CR |= 0x04;
+    CAN_CR |= Bits_Bit8_2;
   }
-   if(Can_Bus.tx_flag!=0)
+   if(Can_Bus.tx_flag)
    {
      if(Timer_timeout(7))
      {
-       Can_Bus.tx_flag = 0;
+       Can_Bus.tx_flag = Bits_State_NotSet;
      }
    }
 }
 
 void Can_rx(Can_Message_t *message) compact
 {
-  u8 i;
   Can_Message_t *rx_message = Can_Bus.rx.messages + Can_Bus.rx.tail;
 
   if (Can_Bus.rx.head == Can_Bus.rx.tail)
@@ -194,7 +200,7 @@ void Can_rx(Can_Message_t *message) compact
     message->status = 0;
   }
 
-  (*message) = rx_message;
+  (*message) = (*rx_message);
   message->status = 1;
 
   Can_Bus.rx.tail += 1;
@@ -205,14 +211,16 @@ void Can_handleInterruption(void) small interrupt 9
 {
   u8 status;
 
-  EA = 0;
-  if((CAN_IR&0x80) == 0x80)
+  DISABLE_INTERRUPT();
+  if(CAN_IR & Bits_Bit8_7)
   {
-    CAN_IR &= 0x3F;
+    CAN_IR &= ~(Bits_Bit8_7 | Bits_Bit8_6);
   }
-  if((CAN_IR&0x40) == 0x40)
+  if(CAN_IR & Bits_Bit8_6)
   {
-    CAN_IR &= 0xBF;
+    Can_Message_t *rx_message = Can_Bus.rx.messages + Can_Bus.rx.head;
+
+    CAN_IR &= ~(Bits_Bit8_6);
     ADR_H = 0xFF;
     ADR_M = 0x00;
     ADR_L = 0x68;
@@ -222,69 +230,71 @@ void Can_handleInterruption(void) small interrupt 9
     APP_EN = 1;
     while(APP_EN);
     status = DATA3;
-    Can_Bus.BusRXbuf[Can_Bus.rx.head].status = status;
+    rx_message->status = status;
     APP_EN = 1;
     while(APP_EN);
-    Can_Bus.BusRXbuf[Can_Bus.rx.head].ID <<= 8;
-    Can_Bus.BusRXbuf[Can_Bus.rx.head].ID |= DATA3;
-    Can_Bus.BusRXbuf[Can_Bus.rx.head].ID <<= 8;
-    Can_Bus.BusRXbuf[Can_Bus.rx.head].ID |= DATA2;
-    Can_Bus.BusRXbuf[Can_Bus.rx.head].ID <<= 8;
-    Can_Bus.BusRXbuf[Can_Bus.rx.head].ID |= DATA1;
-    Can_Bus.BusRXbuf[Can_Bus.rx.head].ID <<= 8;
-    Can_Bus.BusRXbuf[Can_Bus.rx.head].ID |= DATA0;
-    Can_Bus.BusRXbuf[Can_Bus.rx.head].ID=Can_Bus.BusRXbuf[Can_Bus.rx.head].ID>>3;
-    if(0==(status&0x80))
+
+    rx_message->id <<= 8;
+    rx_message->id |= DATA3;
+    rx_message->id <<= 8;
+    rx_message->id |= DATA2;
+    rx_message->id <<= 8;
+    rx_message->id |= DATA1;
+    rx_message->id <<= 8;
+    rx_message->id |= DATA0;
+    rx_message->id >>= 3;
+
+    if(!(status & Bits_Bit8_7))
     {
-      Can_Bus.BusRXbuf[Can_Bus.rx.head].ID >>= 18;
+      rx_message->id >>= 18;
     }
-    if(0==(status&0x40))
+    if(!(status & Bits_Bit8_6))
     {
       APP_EN = 1;
       while(APP_EN);
-      Can_Bus.BusRXbuf[Can_Bus.rx.head].candata[0] = DATA3;
-      Can_Bus.BusRXbuf[Can_Bus.rx.head].candata[1] = DATA2;
-      Can_Bus.BusRXbuf[Can_Bus.rx.head].candata[2] = DATA1;
-      Can_Bus.BusRXbuf[Can_Bus.rx.head].candata[3] = DATA0;
+      rx_message->bytes[0] = DATA3;
+      rx_message->bytes[1] = DATA2;
+      rx_message->bytes[2] = DATA1;
+      rx_message->bytes[3] = DATA0;
       APP_EN = 1;
       while(APP_EN);
-      Can_Bus.BusRXbuf[Can_Bus.rx.head].candata[4] = DATA3;
-      Can_Bus.BusRXbuf[Can_Bus.rx.head].candata[5] = DATA2;
-      Can_Bus.BusRXbuf[Can_Bus.rx.head].candata[6] = DATA1;
-      Can_Bus.BusRXbuf[Can_Bus.rx.head].candata[7] = DATA0;
+      rx_message->bytes[4] = DATA3;
+      rx_message->bytes[5] = DATA2;
+      rx_message->bytes[6] = DATA1;
+      rx_message->bytes[7] = DATA0;
     }
     RAMMODE = 0;
-    Can_Bus.rx.head = (Can_Bus.rx.head + 1) % CANBUFFSIZE;
+    Can_Bus.rx.head = (Can_Bus.rx.head + 1) % CAN__BUFFER_SIZE;
   }
-  if((CAN_IR&0x20) == 0x20)
+  if(CAN_IR & Bits_Bit8_5)
   {
-    CAN_IR &= ~(0x20);
+    CAN_IR &= ~Bits_Bit8_5;
     if(Can_Bus.tx.tail != Can_Bus.tx.head)
     {
       LoadOneFrame();
-      CAN_CR |= 0x04;
-      Timer_start(7,3000);
+      CAN_CR |= Bits_Bit8_2;
+      Timer_start(7, 3000);
     }
     else
     {
-      Can_Bus.tx_flag = 0;
+      Can_Bus.tx_flag = Bits_State_NotSet;
     }
   }
-  if((CAN_IR&0x10) == 0x10)
+  if(CAN_IR & Bits_Bit8_4)
   {
-    CAN_IR &= 0xEF;
+    CAN_IR &= ~Bits_Bit8_4;
   }
-  if((CAN_IR&0x08) == 0x08)
+  if(CAN_IR & Bits_Bit8_3)
   {
-    CAN_IR &= 0xF7;
+    CAN_IR &= ~Bits_Bit8_3;
   }
-  if((CAN_IR&0x04) == 0x04)
+  if(CAN_IR & Bits_Bit8_2)
   {
-    CAN_IR &= 0xFB;
-    CAN_CR |= 0x04;
+    CAN_IR &= ~Bits_Bit8_2;
+    CAN_CR |= Bits_Bit8_2;
   }
-  CAN_ET=0;
-  EA = 1;
+  CAN_ET = 0;
+  ENABLE_INTERRUPT();
 }
 
 

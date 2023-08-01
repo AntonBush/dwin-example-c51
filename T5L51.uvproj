@@ -383,9 +383,9 @@
               <FilePath>.\driver\timer.c</FilePath>
             </File>
             <File>
-              <FileName>canbus.c</FileName>
+              <FileName>can.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\driver\canbus.c</FilePath>
+              <FilePath>.\driver\can.c</FilePath>
             </File>
           </Files>
         </Group>
