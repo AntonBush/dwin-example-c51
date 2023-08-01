@@ -1,7 +1,7 @@
 #include "app/ui.h"
 
 #include "app/vpmap.h"
-#include "driver/dgusvar.h"
+//#include "driver/dgusvar.h"
 
 void Ui_init(Ui_MainPage_t *page)
 {

@@ -397,11 +397,6 @@
               <FileType>1</FileType>
               <FilePath>.\source\main.c</FilePath>
             </File>
-            <File>
-              <FileName>const.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\source\const.c</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>

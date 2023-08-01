@@ -3,6 +3,8 @@
 #include "timer.h"
 #include "sys.h"
 
+#define CAN__LOOP_INDEX(index) ((index) + 1) % CAN__BUFFER_SIZE
+
 static xdata Can_Bus_t Can_Bus;
 
 //125K{0x20,0x20,0xF6,0x00},150K{0x3F,0x40,0x72,0x00},
@@ -70,7 +72,7 @@ void Can_resetError(void) small
   CAN_ET &= ~Bits_Bit8_5;
 
   CAN_CR |= Bits_Bit8_6;
-  Timer_start(6, 1);
+  TIMER__START_SAFE(6, 1);
   while(!Timer_timeout(6));
   CAN_CR &= ~Bits_Bit8_6;
 
@@ -110,7 +112,7 @@ void LoadOneFrame(void) small
   DATA0 = tx_message->bytes[7];
   APP_EN = 1;
   while(APP_EN);
-  Can_Bus.tx.tail += 1;
+  Can_Bus.tx.tail = CAN__LOOP_INDEX(Can_Bus.tx.tail);
   RAMMODE = 0;
 }
 
@@ -137,8 +139,8 @@ void Can_tx(u8 status, u32 id, const u8 *bytes, u16 length) compact
   {
     tx_message->id = idtmp;
     tx_message->status = status & (Bits_Bit8_7 | Bits_Bit8_6);
-    Can_Bus.tx.head += 1;
-    tx_message += 1;
+    Can_Bus.tx.head = CAN__LOOP_INDEX(Can_Bus.tx.head);
+    tx_message = Can_Bus.tx.messages + Can_Bus.tx.head;
   }
   else
   {
@@ -155,8 +157,8 @@ void Can_tx(u8 status, u32 id, const u8 *bytes, u16 length) compact
         tx_message->bytes[j] = bytes[k];
         k += 1;
       }
-      Can_Bus.tx.head += 1;
-      tx_message += 1;
+      Can_Bus.tx.head = CAN__LOOP_INDEX(Can_Bus.tx.head);
+      tx_message = Can_Bus.tx.messages + Can_Bus.tx.head;
     }
     if(framoffset)
     {
@@ -168,9 +170,11 @@ void Can_tx(u8 status, u32 id, const u8 *bytes, u16 length) compact
         k += 1;
       }
       for(; j < 8; ++j)
+      {
         tx_message->bytes[j] = 0;
-      Can_Bus.tx.head += 1;
-      tx_message += 1;
+      }
+      Can_Bus.tx.head = CAN__LOOP_INDEX(Can_Bus.tx.head);
+      tx_message = Can_Bus.tx.messages + Can_Bus.tx.head;
     }
   }
   if(!Can_Bus.tx_flag)
@@ -179,7 +183,7 @@ void Can_tx(u8 status, u32 id, const u8 *bytes, u16 length) compact
     LoadOneFrame();
     ENABLE_INTERRUPT();
     Can_Bus.tx_flag = Bits_State_Set;
-    Timer_start(7,3000);
+    TIMER__START_SAFE(7,3000);
     CAN_CR |= Bits_Bit8_2;
   }
    if(Can_Bus.tx_flag)
@@ -201,8 +205,7 @@ u8 Can_rx(Can_Message_t *message) compact
   }
 
   (*message) = (*rx_message);
-  Can_Bus.rx.tail += 1;
-  Can_Bus.rx.tail %= CAN__BUFFER_SIZE;
+  Can_Bus.rx.tail = CAN__LOOP_INDEX(Can_Bus.rx.tail);
 
   return 1;
 }
@@ -264,7 +267,7 @@ void Can_handleInterruption(void) small interrupt 9
       rx_message->bytes[7] = DATA0;
     }
     RAMMODE = 0;
-    Can_Bus.rx.head = (Can_Bus.rx.head + 1) % CAN__BUFFER_SIZE;
+    Can_Bus.rx.head = CAN__LOOP_INDEX(Can_Bus.rx.head);
   }
   if(CAN_IR & Bits_Bit8_5)
   {

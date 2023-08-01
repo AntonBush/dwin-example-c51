@@ -77,13 +77,9 @@ void Timer_start(u8 id, u16 time) compact
 {
   u8 timer_id = 1 << id;
 
-  DISABLE_INTERRUPT();
-
   Timer_EnableFlags = Timer_EnableFlags | timer_id;
   Timer_Durations[id] = time;
   Timer_TimeoutFlags &= ~timer_id;
-
-  ENABLE_INTERRUPT();
 }
 
 u8 Timer_timeout(u8 id) compact
@@ -91,11 +87,7 @@ u8 Timer_timeout(u8 id) compact
   u8 timer_id = 1 << id;
   u8 flag;
 
-  DISABLE_INTERRUPT();
-
   flag = Timer_TimeoutFlags & timer_id;
-
-  ENABLE_INTERRUPT();
 
   return flag;
 }
