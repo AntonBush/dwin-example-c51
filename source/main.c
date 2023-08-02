@@ -24,25 +24,25 @@ void main()
 
 	ENABLE_INTERRUPT();
 
-	TIMER__START_SAFE(0,20);
-	TIMER__START_SAFE(1,500);
+	INTERRUPT_GUARD(Timer_start(0, 20));
+  INTERRUPT_GUARD(Timer_start(1, 500));
 
 	Logic_init(&(logic));
 
 	while(1)
 	{
-//		if(Timer_timeout(1))
-//		{
-//			u8 chabuf[2] = { 0, 0 };
-//      chabuf[0] = (lifeCounter) & 0xFF;
-////			chabuf[1] = (logic.game.game.on) & 0x01;
-////			chabuf[1] |= ((logic.dashboardParams.pageIndex) & 0x0F) << 4;
+		if(Timer_timeout(1))
+		{
+			u8 chabuf[2] = { 0, 0 };
+      chabuf[0] = (lifeCounter) & 0xFF;
+//			chabuf[1] = (logic.game.game.on) & 0x01;
+//			chabuf[1] |= ((logic.dashboardParams.pageIndex) & 0x0F) << 4;
 
-//			Can_tx(0, 0x111, chabuf, 2);
-//			TIMER__START_SAFE(1,500);
+			Can_tx(0, 0x111, chabuf, 2);
+      INTERRUPT_GUARD(Timer_start(1, 500));
 
-//			lifeCounter++;
-//		}
+			lifeCounter++;
+		}
 		if(Timer_timeout(0))
 		{
       Can_Message_t message;
@@ -56,7 +56,7 @@ void main()
 
 			Logic_update(&(logic));
 
-			TIMER__START_SAFE(0, 20);
+      INTERRUPT_GUARD(Timer_start(0,20));
 		}
 		Can_resetError();
 	}

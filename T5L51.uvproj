@@ -418,11 +418,6 @@
               <FilePath>.\src\app\ui.c</FilePath>
             </File>
             <File>
-              <FileName>dgusvar.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\driver\dgusvar.c</FilePath>
-            </File>
-            <File>
               <FileName>bytevector.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\lib\bytevector.c</FilePath>

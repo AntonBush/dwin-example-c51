@@ -25,13 +25,17 @@
 
 #define ENABLE_INTERRUPT() EA = 1
 #define DISABLE_INTERRUPT() EA = 0
+#define INTERRUPT_GUARD(expression) \
+DISABLE_INTERRUPT(); \
+expression; \
+ENABLE_INTERRUPT();
 
 void write_dgus_vp(u16 addr,u8* buf,u16 len);
 void read_dgus_vp(u16 addr,u8* buf,u16 len);
 
 void SetPinOut(u8 Port,u8 Pin);
 void SetPinIn(u8 Port,u8 Pin);
-void  PinOutput(u8 Port,u8 Pin,u8 value);
+void PinOutput(u8 Port,u8 Pin,u8 value);
 
 void delay_us(unsigned int t);
 void delay_ms(u16 t);

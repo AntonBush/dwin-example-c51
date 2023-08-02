@@ -3,7 +3,73 @@
 #include "timer.h"
 #include "sys.h"
 
-#define CAN__LOOP_INDEX(index) ((index) + 1) % CAN__BUFFER_SIZE
+#define CAN__RESET_CONTROL() CAN_CR = 0
+
+#define CAN__ENABLE() CAN_CR |= Can_Control_Enable
+#define CAN__DISABLE() CAN_CR &= ~Can_Control_Enable
+
+#define CAN__RESET() \
+CAN_CR |= Can_Control_Reset; \
+INTERRUPT_GUARD(Timer_start(6, 1)) \
+while(!Timer_timeout(6)); \
+CAN_CR &= ~Can_Control_Reset
+
+#define CAN__CONFIGURE() \
+CAN_CR |= Can_Control_Configure; \
+do {} while(CAN_CR & Can_Control_Configure)
+
+#define CAN__SPEED_1_SAMPLING() CAN_CR |= Can_Control_SpeedMode
+#define CAN__SPEED_3_SAMPLING() CAN_CR &= ~Can_Control_SpeedMode
+#define CAN__SEND() CAN_CR |= Can_Control_Send
+#define CAN__WAIT_SENDING() do {} while(CAN_CR & Can_Control_Send)
+
+#define CAN__LOOP_INDEX(index) (((index) + 1) % CAN__BUFFER_SIZE)
+
+typedef enum Can_Control
+{
+  Can_Control_Send = Bits_Bit8_2
+  // 1 = double; 0 = single
+  , Can_Control_FilterMode = Bits_Bit8_3
+
+  // 1 = 1 sampling; 0 = 3 sampling
+  , Can_Control_SpeedMode = Bits_Bit8_4
+  , Can_Control_Configure = Bits_Bit8_5
+  , Can_Control_Reset = Bits_Bit8_6
+  , Can_Control_Enable = Bits_Bit8_7
+} Can_Control_t;
+
+typedef enum Can_Error
+{
+  Can_Error_Bit = Bits_Bit8_0
+  , Can_Error_Bit_Filling = Bits_Bit8_1
+  , Can_Error_Format = Bits_Bit8_2
+  , Can_Error_Response = Bits_Bit8_3
+
+  , Can_Error_CrcCheck = Bits_Bit8_4
+  , Can_Error_Passive = Bits_Bit8_5
+  , Can_Error_Active = Bits_Bit8_6
+  , Can_Error_NodeSuspension = Bits_Bit8_7
+} Can_Error_t;
+
+typedef enum Can_Status
+{
+  Can_Status_Rtr = Bits_Bit8_6
+  , Can_Status_Ide = Bits_Bit8_7
+} Can_Status_t;
+
+typedef enum Can_Length
+{
+  Can_Length_0
+  , Can_Length_1
+  , Can_Length_2
+  , Can_Length_3
+
+  , Can_Length_4
+  , Can_Length_5
+  , Can_Length_6
+  , Can_Length_7
+  , Can_Length_8
+};
 
 static xdata Can_Bus_t Can_Bus;
 
@@ -14,6 +80,14 @@ void Can_init(
   , const Can_AcceptanceFilter_t *filter
 )
 {
+  Can_Bus.rx.head = 0;
+  Can_Bus.rx.tail = 0;
+  Can_Bus.tx.head = 0;
+  Can_Bus.tx.tail = 0;
+  Can_Bus.tx_flag = Bits_State_NotSet;
+
+  CAN__RESET_CONTROL();
+
   SetPinOut(0,2);
   SetPinIn(0,3);
   PinOutput(0,2,1);
@@ -60,22 +134,19 @@ void Can_init(
   APP_EN = 1;
   while(APP_EN);
   RAMMODE = 0;
-  CAN_CR = Bits_Bit8_7 | Bits_Bit8_5;
-  while(CAN_CR & Bits_Bit8_5);
+
+  CAN__ENABLE();
+  CAN__CONFIGURE();
+
   ECAN = 1;
 }
 
 void Can_resetError(void) small
 {
-  if (!(CAN_ET & Bits_Bit8_5)) return;
+  if (!(CAN_ET & Can_Error_Passive)) return;
 
-  CAN_ET &= ~Bits_Bit8_5;
-
-  CAN_CR |= Bits_Bit8_6;
-  TIMER__START_SAFE(6, 1);
-  while(!Timer_timeout(6));
-  CAN_CR &= ~Bits_Bit8_6;
-
+  CAN_ET &= ~Can_Error_Passive;
+  CAN__RESET();
   Can_Bus.tx_flag = Bits_State_NotSet;
 }
 
@@ -118,93 +189,85 @@ void LoadOneFrame(void) small
 
 void Can_tx(u8 status, u32 id, const u8 *bytes, u16 length) compact
 {
-  u8 i,j,k,framnum,framoffset;
-  u32 idtmp,statustmp;
   Can_Message_t *tx_message;
 
-  if(length > 2048)
+  if (2048 < length)
     return;
 
-  if(status & Bits_Bit8_7)
+  status &= (Can_Status_Ide | Can_Status_Rtr);
+
+  if(status & Can_Status_Ide)
   {
-    idtmp = id << 3;
+    id <<= 3;
   }
   else
   {
-    idtmp = id << 21;
+    id <<= 21;
   }
 
   tx_message = Can_Bus.tx.messages + Can_Bus.tx.head;
-  if(tx_message->status & Bits_Bit8_6)
+  if(status & Can_Status_Rtr)
   {
-    tx_message->id = idtmp;
-    tx_message->status = status & (Bits_Bit8_7 | Bits_Bit8_6);
+    tx_message->id = id;
+    tx_message->status = status;
     Can_Bus.tx.head = CAN__LOOP_INDEX(Can_Bus.tx.head);
-    tx_message = Can_Bus.tx.messages + Can_Bus.tx.head;
   }
   else
   {
-    framnum = length >> 3;
-    framoffset = length % 8;
-    k = 0;
-    statustmp = status & (Bits_Bit8_7 | Bits_Bit8_6);
-    for(i = 0; i < framnum; ++i)
+    u8 frame, byte;
+    u8 n_frames = length >> 3;
+    u8 frame_offset = length % 8;
+    for(frame = 0; frame < n_frames; ++frame)
     {
-      tx_message->id = idtmp;
-      tx_message->status = statustmp | Bits_Bit8_3;
-      for(j = 0; j < 8; ++j)
+      tx_message->id = id;
+      tx_message->status = status | Can_Length_8;
+      for(byte = 0; byte < 8; ++byte)
       {
-        tx_message->bytes[j] = bytes[k];
-        k += 1;
+        tx_message->bytes[byte] = *bytes++;
       }
       Can_Bus.tx.head = CAN__LOOP_INDEX(Can_Bus.tx.head);
       tx_message = Can_Bus.tx.messages + Can_Bus.tx.head;
     }
-    if(framoffset)
+    if(frame_offset)
     {
-      tx_message->id = idtmp;
-      tx_message->status = statustmp | framoffset;
-      for(j = 0; j < framoffset; ++j)
+      tx_message->id = id;
+      tx_message->status = status | frame_offset;
+      for(byte = 0; byte < 8; ++byte)
       {
-        tx_message->bytes[j] = bytes[k];
-        k += 1;
-      }
-      for(; j < 8; ++j)
-      {
-        tx_message->bytes[j] = 0;
+        tx_message->bytes[byte]
+          = byte < frame_offset
+          ? *bytes++
+          : 0;
       }
       Can_Bus.tx.head = CAN__LOOP_INDEX(Can_Bus.tx.head);
-      tx_message = Can_Bus.tx.messages + Can_Bus.tx.head;
     }
   }
+
   if(!Can_Bus.tx_flag)
   {
-    DISABLE_INTERRUPT();
-    LoadOneFrame();
-    ENABLE_INTERRUPT();
+    CAN__WAIT_SENDING();
+
+    INTERRUPT_GUARD(LoadOneFrame());
     Can_Bus.tx_flag = Bits_State_Set;
-    TIMER__START_SAFE(7,3000);
-    CAN_CR |= Bits_Bit8_2;
+    INTERRUPT_GUARD(Timer_start(7, 3000));
+
+    CAN__SEND();
   }
-   if(Can_Bus.tx_flag)
-   {
-     if(Timer_timeout(7))
-     {
-       Can_Bus.tx_flag = Bits_State_NotSet;
-     }
-   }
+
+  if(Can_Bus.tx_flag && Timer_timeout(7))
+  {
+    Can_Bus.tx_flag = Bits_State_NotSet;
+  }
 }
 
 u8 Can_rx(Can_Message_t *message) compact
 {
-  Can_Message_t *rx_message = Can_Bus.rx.messages + Can_Bus.rx.tail;
-
   if (Can_Bus.rx.head == Can_Bus.rx.tail)
   {
     return 0;
   }
 
-  (*message) = (*rx_message);
+  (*message) = Can_Bus.rx.messages[Can_Bus.rx.tail];
   Can_Bus.rx.tail = CAN__LOOP_INDEX(Can_Bus.rx.tail);
 
   return 1;
@@ -274,9 +337,12 @@ void Can_handleInterruption(void) small interrupt 9
     CAN_IR &= ~Bits_Bit8_5;
     if(Can_Bus.tx.tail != Can_Bus.tx.head)
     {
+      CAN__WAIT_SENDING();
+
       LoadOneFrame();
-      CAN_CR |= Bits_Bit8_2;
       Timer_start(7, 3000);
+
+      CAN__SEND();
     }
     else
     {
@@ -294,7 +360,7 @@ void Can_handleInterruption(void) small interrupt 9
   if(CAN_IR & Bits_Bit8_2)
   {
     CAN_IR &= ~Bits_Bit8_2;
-    CAN_CR |= Bits_Bit8_2;
+    CAN__SEND();
   }
   CAN_ET = 0;
   ENABLE_INTERRUPT();
