@@ -2,6 +2,5 @@
 *uvgui*
 *uvopt*
 *bin
-/Objects/*
-/Listings/*
+/obj/*
 !.gitkeep
