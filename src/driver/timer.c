@@ -1,6 +1,6 @@
 #include "driver/timer.h"
 
-#include "sys.h"
+#include "driver/sys.h"
 #include "lib/bits.h"
 
 #define TIMER__ENABLE_INTERRUPT_TIMER_0() ET0 = 1

@@ -1,0 +1,161 @@
+VERSION ""
+
+
+NS_ : 
+	NS_DESC_
+	CM_
+	BA_DEF_
+	BA_
+	VAL_
+	CAT_DEF_
+	CAT_
+	FILTER
+	BA_DEF_DEF_
+	EV_DATA_
+	ENVVAR_DATA_
+	SGTYPE_
+	SGTYPE_VAL_
+	BA_DEF_SGTYPE_
+	BA_SGTYPE_
+	SIG_TYPE_REF_
+	VAL_TABLE_
+	SIG_GROUP_
+	SIG_VALTYPE_
+	SIGTYPE_VALTYPE_
+	BO_TX_BU_
+	BA_DEF_REL_
+	BA_REL_
+	BA_DEF_DEF_REL_
+	BU_SG_REL_
+	BU_EV_REL_
+	BU_BO_REL_
+	SG_MUL_VAL_
+
+BS_:
+
+BU_: VCU EMU DCL PCU
+
+
+BO_ 3221225472 VECTOR__INDEPENDENT_SIG_MSG: 0 Vector__XXX
+ SG_ VCU_CtrlVolt : 56|8@1+ (0.2,0) [0|50] "V" Vector__XXX
+ SG_ VCU_VehicleSpeed : 48|8@1+ (1,0) [0|255] "km/h" Vector__XXX
+ SG_ VCU_Heartbeat : 40|8@1+ (1,0) [0|255] "" Vector__XXX
+ SG_ VCU_VehicleEnvTemp : 32|8@1+ (1,-40) [-40|215] "°C" Vector__XXX
+ SG_ VCU_VehicleErrorLel : 24|8@1+ (1,0) [0|4] "" Vector__XXX
+ SG_ VCU_FCSFullPowerSwitch : 20|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ VCU_ONSts : 18|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ VCU_HighVoltStatus : 16|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ VCU_EnergencyStop : 14|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ VCU_VehicleWorkMode : 12|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ VCU_CMD_HV_OnOff : 10|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ VCU_VehiclePowerRD : 0|10@1+ (1,0) [0|1000] "kw" Vector__XXX
+ SG_ VCU_Odometer : 32|32@1+ (0.1,0) [0|1000000] "km" Vector__XXX
+ SG_ VCU_MotorVolt : 16|16@1+ (0.1,0) [0|6553] "V" Vector__XXX
+ SG_ VCU_MotorCrnt : 0|16@1+ (0.1,-3000) [-3000|3553] "A" Vector__XXX
+ SG_ E2V_BMSTemp : 50|8@1+ (1,-40) [-40|215] "°C" Vector__XXX
+ SG_ E2V_BMSErrorlel : 48|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ E2V_BMSErrorCode : 32|16@1+ (1,0) [0|65535] "" Vector__XXX
+ SG_ E2V_HVStatus : 30|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ E2V_RqHVPowerOff : 28|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ E2V_HVpowerOnAllow : 26|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ E3V_EMUErrorLel : 24|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ E2V_EMUErrorCode : 8|16@1+ (1,0) [0|65535] "" Vector__XXX
+ SG_ E2V_BMSSOC : 0|8@1+ (0.4,0) [0|100] "" Vector__XXX
+ SG_ E2V_HMSErrorlel : 56|4@1+ (1,0) [0|4] "" Vector__XXX
+ SG_ E2V_HMSErrorCode : 36|16@1+ (1,0) [0|255] "" Vector__XXX
+ SG_ E2V_HMSPresMid : 20|16@1+ (0.1,0) [0|25] "bar" Vector__XXX
+ SG_ E2V_HMSPresTank : 8|12@1+ (0.01,0) [0|500] "bar" Vector__XXX
+ SG_ E2V_HMSSOC : 0|8@1+ (1,0) [0|100] "%" Vector__XXX
+ SG_ E2V_FCSHyCons : 48|16@1+ (1,0) [0|50000] "ppm" Vector__XXX
+ SG_ E2V_FCSOutputPwr : 32|16@1+ (0.1,0) [0|300] "kw" Vector__XXX
+ SG_ E2V_FCSErrCode : 24|8@1+ (1,0) [0|255] "" Vector__XXX
+ SG_ E2V_FCSErrLvl : 8|16@1+ (1,0) [0|4] "" Vector__XXX
+ SG_ E2V_HMSStatus : 4|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ E2V_BMSStatus : 2|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ E2V_FCSStatus : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ E2V_AvailChrgCurrContinue : 48|16@1+ (0.1,0) [0|6553] "A" Vector__XXX
+ SG_ E2V_AvailChrgCurrPeak : 32|16@1+ (0.1,0) [0|6553] "A" Vector__XXX
+ SG_ E2V_AvailDisChrgCurrContinue : 16|16@1+ (0.1,0) [0|6553] "A" Vector__XXX
+ SG_ E2V_AvailDisChrgCurrPeak : 0|16@1+ (0.1,0) [0|6553] "A" Vector__XXX
+ SG_ E2V_OutputPower : 32|16@1+ (1,-1000) [-1000|1000] "kw" Vector__XXX
+ SG_ E2V_OutputCrnt : 16|16@1+ (1,-1000) [-1000|1000] "A" Vector__XXX
+ SG_ E2V_OutputVolt : 0|16@1+ (1,0) [0|0] "V" Vector__XXX
+ SG_ DCL_WorkCmd : 40|8@1+ (1,0) [0|255] "" Vector__XXX
+ SG_ DCL_ONCmd : 32|8@1+ (1,0) [0|255] "" Vector__XXX
+ SG_ DCL_Life : 56|8@1+ (1,0) [0|255] "" Vector__XXX
+ SG_ DCL_ErrCode : 50|6@1+ (1,0) [0|63] "" Vector__XXX
+ SG_ DCL_WorkSts : 48|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ DCL_RadiatorTemp : 40|8@1+ (1,-40) [-40|215] "°C" Vector__XXX
+ SG_ DCL_CrntOutput : 24|16@1+ (0.1,0) [0|1000] "A" Vector__XXX
+ SG_ DCL_VoltOutput : 16|8@1+ (0.2,0) [0|50] "V" Vector__XXX
+ SG_ DCL_VoltInput : 0|16@1+ (1,0) [0|1000] "V" Vector__XXX
+ SG_ NewSignal_0007 : 32|8@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 2565909661 GasTankData: 8 PCU
+ SG_ maxTankTemp : 0|8@1+ (1,0) [0|216] "deg" Vector__XXX
+ SG_ minTankTemp : 8|8@1+ (1,0) [0|216] "deg" Vector__XXX
+ SG_ maxTankPrs : 16|16@1+ (1,0) [0|655] "Bar" Vector__XXX
+ SG_ minTankPrs : 32|16@1+ (1,0) [0|655] "Bar" Vector__XXX
+ SG_ tankFilling : 48|8@1+ (0.4,0) [0|0] "%" Vector__XXX
+ SG_ valveState : 56|2@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ lifeCounter : 60|4@1+ (1,0) [0|15] "" Vector__XXX
+
+BO_ 2566889373 PCUMsg1: 8 PCU
+ SG_ hvVoltage : 0|12@1+ (0.5,0) [0|1000] "V" Vector__XXX
+ SG_ hvCurrent : 12|12@1+ (1,-2000) [-1500|1500] "A" Vector__XXX
+ SG_ hvMaxChCurrent : 24|12@1+ (1,0) [0|1500] "A" Vector__XXX
+ SG_ hvMaxDischCurrent : 36|12@1+ (1,0) [0|1500] "A" Vector__XXX
+ SG_ SOC : 48|8@1+ (0.4,0) [0|100] "%" Vector__XXX
+ SG_ systemStatus : 56|4@1+ (1,0) [0|15] "" Vector__XXX
+ SG_ lifeCounterPCU : 60|4@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 2561081502 VCUMsg: 8 VCU
+ SG_ ignition : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ emergencyStopReq : 2|2@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ powerReq : 8|12@1+ (1,-1500) [-1500|1500] "kW" Vector__XXX
+ SG_ tractionCurrent : 20|12@1+ (1,-1500) [-1500|1500] "" Vector__XXX
+
+BO_ 2566893469 PCUMsg2: 8 VCU
+ SG_ maxCellVoltage : 0|16@1+ (0.001,0) [0|0] "" Vector__XXX
+ SG_ minCellVoltage : 16|16@1+ (0.001,0) [0|0] "" Vector__XXX
+ SG_ maxBattTemp : 32|8@1+ (1,-40) [-40|215] "" Vector__XXX
+ SG_ minBattTemp : 40|8@1+ (1,-40) [-40|215] "" Vector__XXX
+ SG_ tmsState : 48|2@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 2566838576 PCUMsg3: 8 PCU
+ SG_ operationState : 0|4@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ batteryState : 4|4@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ fuelCellState : 20|4@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ term15State : 8|2@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ term50State : 10|2@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ fuelCellTemp : 40|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ fuelCellOutputPower : 24|12@1+ (0.1,0) [0|0] "" Vector__XXX
+ SG_ hydrogenRate : 48|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ energyRate : 56|8@1+ (1,0) [0|0] "" Vector__XXX
+
+
+
+CM_ SG_ 3221225472 VCU_Heartbeat "Add 1 each time, 0~255 cycles";
+CM_ SG_ 3221225472 VCU_VehiclePowerRD "Vehicle demand power";
+CM_ SG_ 3221225472 E2V_FCSErrLvl "Documentation contains maximum=3, but acording to documentation signal has 5 values:
+1. 0x0
+2. 0x1
+3. 0x2
+4. 0x3
+5. 0x4";
+CM_ SG_ 3221225472 E2V_OutputCrnt "Documentation contains type=Signed, but according to documentation offset=-1000 and minimum=-1000, which leads to the conclusion that type shall be Unsigned";
+CM_ SG_ 3221225472 DCL_Life "0~255 cycles";
+CM_ SG_ 2565909661 maxTankTemp "";
+CM_ SG_ 2566889373 hvVoltage "Current voltage of the high-voltage network";
+CM_ SG_ 2566889373 hvCurrent "Current current of the high-voltage network";
+CM_ SG_ 2566889373 hvMaxChCurrent "Maximum charge current";
+CM_ SG_ 2566889373 hvMaxDischCurrent "The maximum value of the discharge current";
+CM_ SG_ 2566889373 SOC "Traction Battery State of Charge";
+CM_ BO_ 2561081502 "";
+CM_ SG_ 2561081502 powerReq "Requested power";
+VAL_ 2565909661 valveState 0 "closed" 1 "opened" 2 "error" 3 "notAvail" ;
+VAL_ 2566889373 systemStatus 0 "system is off" 1 "precharge" 2 "system is off" 3 "shutdown" 4 "power limit" 14 "error" 15 "NA" ;
+VAL_ 2561081502 ignition 0 "off" 1 "on" 2 "error" 3 "NA" ;
+VAL_ 2561081502 emergencyStopReq 0 "off" 1 "on" 2 "error" 3 "NA" ;
+VAL_ 2566893469 tmsState 0 "off" 1 "CoolingMode" 2 "HeatingMode" 3 "Circulation" ;
+
