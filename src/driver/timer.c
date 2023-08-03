@@ -1,10 +1,17 @@
 #include "driver/timer.h"
 
-#include "driver/sys.h"
-#include "driver/interrupt.h"
+#include "sys.h"
+#include "lib/bits.h"
+
+#define TIMER__ENABLE_INTERRUPT_TIMER_0() ET0 = 1
 
 #define TIMER__MODE_TIMER_0(flags) ((flags) << 0)
 #define TIMER__MODE_TIMER_1(flags) ((flags) << 4)
+
+#define TIMER__START_TIMER_0() TR0 = 1
+#define TIMER__STOP_TIMER_0() TR0 = 0
+
+#define TIMER__SET_TIMER_0(value) TH0 = (value) >> 8; TL0 = (value)
 
 typedef enum Timer_Mode
 {
@@ -16,107 +23,71 @@ typedef enum Timer_Mode
   , Timer_Mode_Gate = Bits_Bit8_3
 } Timer_Mode_t;
 
-u32 data Timer_Tick = 0;
+u8 data Timer_Tick = 0;
 
-//עӢú޻ֹ˽ؔ؃ϊ֢ЩҤìֻŜԃޓࠚگ˽؃ϊ
-u8 data Timer_EnableFlags;   //8ٶɭ֨ʱǷˇرʹŜ
-u8 data Timer_TimeoutFlags;   //8ٶɭ֨ʱǷˇرӬʱ
-u16 data Timer_Durations[8];  //8ٶɭ֨ʱǷ֨ʱʱݤ
-
-static void Timer_setTimer0(u16 value);
-static void Timer_startTimer0(void);
-static void Timer_stopTimer0(void);
-static void Timer_handleInterruption(void);
+u8 data Timer_EnableFlags;
+u8 data Timer_TimeoutFlags;
+u16 data Timer_Durations[8];
 
 void Timer_init(void)
 {
+  TIMER__STOP_TIMER_0();
+
+  Timer_TimeoutFlags = 0;
+  Timer_EnableFlags = 0;
+
   TMOD = (
     TIMER__MODE_TIMER_0(Timer_Mode_16Bit)
     | TIMER__MODE_TIMER_1(Timer_Mode_16Bit)
   );
 
-  Timer_setTimer0(0);
-  Timer_stopTimer0();
+  TIMER__SET_TIMER_0(T1MS);
 
-  Timer_TimeoutFlags = 0;
-  Timer_EnableFlags = 0;
+  TIMER__ENABLE_INTERRUPT_TIMER_0();
 
-  TMOD |= TIMER__MODE_TIMER_0(Timer_Mode_16Bit);
-  Timer_setTimer0(T1MS);
-
-  Interrupt_Timer0Handler = Timer_handleInterruption;
-  
-  Interrupt_enableInterruption(Interrupt_Interruption_Timer0);
-
-  Timer_startTimer0();
+  TIMER__START_TIMER_0();
 }
 
-void Timer_start(u8 id, u16 time)
+void Timer_handleInterruption(void) small interrupt 1
 {
-  u8 interrupt_flag = Interrupt_enabled();
-  u8 timer_id;
-  Interrupt_disable();
-  
-  if (7 < id) id = 7;
-  if (time == 0) time = 1;
-  timer_id = 1 << id;
+  u8 i;
 
-  Timer_EnableFlags |= timer_id;
-  Timer_Durations[id] = time;
-  Timer_TimeoutFlags &= ~timer_id;
+  DISABLE_INTERRUPT();
 
-  Interrupt_restore(interrupt_flag);
-}
+  Timer_Tick += 1;
 
-u8 Timer_timeout(u8 id)
-{
-  u8 interrupt_flag = Interrupt_enabled();
-  u8 flag;
-  Interrupt_disable();
-
-  flag = Timer_TimeoutFlags & (1 << id);
-
-  Interrupt_restore(interrupt_flag);
-  return flag;
-}
-
-void Timer_handleInterruption(void)
-{
-  u8 interrupt_flag = Interrupt_enabled();
-  u8 data i;
-  Interrupt_disable();
-
-  Timer_setTimer0(T1MS);
-  ++Timer_Tick;
+  TIMER__SET_TIMER_0(T1MS);
 
   for(i = 0; i < 8; ++i)
   {
     u8 timer_id = 1 << i;
     if (!(Timer_EnableFlags & timer_id)) continue;
 
-    --Timer_Durations[i];
-    if(Timer_Durations[i] == 0)
-    {
-      Timer_TimeoutFlags |= timer_id;
-      Timer_EnableFlags &= ~timer_id;
-    }
+    Timer_Durations[i] -= 1;
+    if(Timer_Durations[i]) continue;
+
+    Timer_TimeoutFlags |= timer_id;
+    Timer_EnableFlags &= ~timer_id;
   }
 
-  Interrupt_restore(interrupt_flag);
+  ENABLE_INTERRUPT();
 }
 
-void Timer_setTimer0(u16 value)
+void Timer_start(u8 id, u16 time)
 {
-  TH0 = (value >> 8) & 0xFF;
-  TL0 = (value >> 0) & 0xFF;
+  u8 timer_id = 1 << id;
+
+  Timer_EnableFlags = Timer_EnableFlags | timer_id;
+  Timer_Durations[id] = time;
+  Timer_TimeoutFlags &= ~timer_id;
 }
 
-void Timer_startTimer0(void)
+u8 Timer_timeout(u8 id)
 {
-  TR0 = 1;
-}
+  u8 timer_id = 1 << id;
+  u8 flag;
 
-void Timer_stopTimer0(void)
-{
-  TR0 = 0;
+  flag = Timer_TimeoutFlags & timer_id;
+
+  return flag;
 }

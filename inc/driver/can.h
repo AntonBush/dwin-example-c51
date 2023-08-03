@@ -2,6 +2,7 @@
 #define __CAN_H__
 
 #include "lib/int.h"
+#include "lib/bits.h"
 
 typedef struct Can_Message
 {
@@ -23,16 +24,8 @@ typedef struct Can_Bus
 {
   Can_BusBuffer_t rx;
   Can_BusBuffer_t tx;
-  u8 tx_flag;
+  Bits_State_t tx_flag;
 } Can_Bus_t;
-
-// RX only
-typedef struct Can_Bus8283
-{
-  u8 buffer[CAN__BUFFER_SIZE];
-  u16 head;
-  u16 tail;
-} Can_Bus8283_t;
 
 typedef struct Can_InitConfig
 {
@@ -41,16 +34,27 @@ typedef struct Can_InitConfig
   u8 BTR1;
 } Can_InitConfig_t;
 
-typedef struct Can_AcceptanceFilter
+typedef struct Can_Filter
 {
-  u32 acceptance_code;
+  union Can_Filter_AcceptanceCode
+  {
+    u32 value;
+    u8 bytes[4];
+  } acceptance_code;
   // '0' - match, '1' - ignore
-  u32 acceptance_mask;
-} Can_AcceptanceFilter_t;
+  union Can_Filter_AcceptanceMask
+  {
+    u32 value;
+    u8 bytes[4];
+  } acceptance_mask;
+} Can_Filter_t;
 
-void Can_init(Can_InitConfig_t config, Can_AcceptanceFilter_t filter);
-void Can_resetError(void);
-Can_Message_t Can_rx(void);
-void Can_tx(u32 id, u8 status, u16 n_bytes, const u8 *bytes);
+void Can_init(
+  const Can_InitConfig_t *config
+  , const Can_Filter_t *filter
+);
+void Can_resetError(void) small;
+u8 Can_rx(Can_Message_t *message);
+void Can_tx(u8 status, u32 id, const u8 *bytes, u16 length);
 
 #endif

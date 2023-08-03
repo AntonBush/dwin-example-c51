@@ -1,9 +1,10 @@
 #ifndef __TIMER_H__
 #define __TIMER_H__
 
+#include "driver/sys.h"
 #include "lib/int.h"
 
-extern data u32 Timer_Tick;
+extern u8 data Timer_Tick;
 
 void Timer_init(void);
 void Timer_start(u8 id, u16 time);

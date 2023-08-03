@@ -360,12 +360,12 @@
       </TargetOption>
       <Groups>
         <Group>
-          <GroupName>startup</GroupName>
+          <GroupName>device</GroupName>
           <Files>
             <File>
               <FileName>STARTUP_M5.A51</FileName>
               <FileType>2</FileType>
-              <FilePath>.\STARTUP_M5.A51</FilePath>
+              <FilePath>.\src\device\STARTUP_M5.A51</FilePath>
             </File>
           </Files>
         </Group>
@@ -378,29 +378,19 @@
               <FilePath>.\driver\sys.c</FilePath>
             </File>
             <File>
-              <FileName>timer.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\driver\timer.c</FilePath>
-            </File>
-            <File>
               <FileName>can.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\driver\can.c</FilePath>
+              <FilePath>.\src\driver\can.c</FilePath>
             </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>application</GroupName>
-          <Files>
             <File>
-              <FileName>main.c</FileName>
+              <FileName>timer.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\source\main.c</FilePath>
+              <FilePath>.\src\driver\timer.c</FilePath>
             </File>
           </Files>
         </Group>
         <Group>
-          <GroupName>logic</GroupName>
+          <GroupName>app</GroupName>
           <Files>
             <File>
               <FileName>canrx.c</FileName>
@@ -413,14 +403,14 @@
               <FilePath>.\src\app\logic.c</FilePath>
             </File>
             <File>
+              <FileName>main.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\app\main.c</FilePath>
+            </File>
+            <File>
               <FileName>ui.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\app\ui.c</FilePath>
-            </File>
-            <File>
-              <FileName>bytevector.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\lib\bytevector.c</FilePath>
             </File>
           </Files>
         </Group>

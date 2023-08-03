@@ -1,13 +1,42 @@
 #include "driver/can.h"
 
-#include "driver/sys.h"
-#include "driver/pio.h"
-#include "driver/interrupt.h"
 #include "driver/timer.h"
-#include "driver/dgusvar.h"
+#include "driver/sys.h"
 
-#define CAN__TIMER_ID 7
-#define CAN__TIMER_DURATION 3000
+#define CAN__RESET_CONTROL() CAN_CR = 0
+
+#define CAN__ENABLE() CAN_CR |= Can_Control_Enable
+#define CAN__DISABLE() CAN_CR &= ~Can_Control_Enable
+
+#define CAN__RESET() \
+CAN_CR |= Can_Control_Reset; \
+INTERRUPT_GUARD(Timer_start(6, 1)) \
+while(!Timer_timeout(6)); \
+CAN_CR &= ~Can_Control_Reset
+
+#define CAN__CONFIGURE() \
+CAN_CR |= Can_Control_Configure; \
+do {} while(CAN_CR & Can_Control_Configure)
+
+#define CAN__SPEED_1_SAMPLING() CAN_CR |= Can_Control_SpeedMode
+#define CAN__SPEED_3_SAMPLING() CAN_CR &= ~Can_Control_SpeedMode
+#define CAN__SEND() CAN_CR |= Can_Control_Send
+#define CAN__WAIT_SENDING() do {} while(CAN_CR & Can_Control_Send)
+
+#define CAN__LOOP_INDEX(index) (((index) + 1) % CAN__BUFFER_SIZE)
+
+typedef enum Can_Control
+{
+  Can_Control_Send = Bits_Bit8_2
+  // 1 = double; 0 = single
+  , Can_Control_FilterMode = Bits_Bit8_3
+
+  // 1 = 1 sampling; 0 = 3 sampling
+  , Can_Control_SpeedMode = Bits_Bit8_4
+  , Can_Control_Configure = Bits_Bit8_5
+  , Can_Control_Reset = Bits_Bit8_6
+  , Can_Control_Enable = Bits_Bit8_7
+} Can_Control_t;
 
 typedef enum Can_Error
 {
@@ -15,411 +44,326 @@ typedef enum Can_Error
   , Can_Error_Bit_Filling = Bits_Bit8_1
   , Can_Error_Format = Bits_Bit8_2
   , Can_Error_Response = Bits_Bit8_3
+
   , Can_Error_CrcCheck = Bits_Bit8_4
   , Can_Error_Passive = Bits_Bit8_5
   , Can_Error_Active = Bits_Bit8_6
   , Can_Error_NodeSuspension = Bits_Bit8_7
 } Can_Error_t;
 
-static const DgusVar_Address_t Can_BaseAddress = {
-  DGUSVAR__CAN_BASE_ADDRESS_H
-  , DGUSVAR__CAN_BASE_ADDRESS_M
-  , DGUSVAR__CAN_BASE_ADDRESS_L
+typedef enum Can_Status
+{
+  Can_Status_Rtr = Bits_Bit8_6
+  , Can_Status_Ide = Bits_Bit8_7
+} Can_Status_t;
+
+typedef enum Can_Length
+{
+  Can_Length_0
+  , Can_Length_1
+  , Can_Length_2
+  , Can_Length_3
+
+  , Can_Length_4
+  , Can_Length_5
+  , Can_Length_6
+  , Can_Length_7
+  , Can_Length_8
 };
 
-static Can_Bus_t Can_CanBus;
+static Can_Bus_t xdata Can_Bus;
 
-// internal implementation defines
-
-static void Can_resetControl(void);
-static void Can_configure(void);
-static void Can_enable(void);
-static void Can_handleInterruption(void);
-static u8 Can_error(void);
-static void Can_setError(u8 error);
-static void Can_softwareReset(void);
-static void Can_loadTxMessage(void);
-static void Can_sendMessage(void);
-static void Can_moveBufferHead(Can_BusBuffer_t *buffer);
-static void Can_moveBufferTail(Can_BusBuffer_t *buffer);
-static void Can_startTimer(void);
-
-// interface implementation
-
-void Can_init(Can_InitConfig_t config, Can_AcceptanceFilter_t filter)
+//125K{0x20,0x20,0xF6,0x00},150K{0x3F,0x40,0x72,0x00},
+//125K{0x3F,0x40,0x72,0x00},250K{0x1F,0x40,0x72,0x00},500K{0x0F,0x40,0x72,0x00},1M{0x07,0x40,0x72,0x00}
+void Can_init(
+  const Can_InitConfig_t *config
+  , const Can_Filter_t *filter
+)
 {
-  DgusVar_Message_t message;
+  Can_Bus.rx.head = 0;
+  Can_Bus.rx.tail = 0;
+  Can_Bus.tx.head = 0;
+  Can_Bus.tx.tail = 0;
+  Can_Bus.tx_flag = Bits_State_NotSet;
 
-  Can_CanBus.rx.head = 0;
-  Can_CanBus.rx.tail = 0;
-  Can_CanBus.tx.head = 0;
-  Can_CanBus.tx.tail = 0;
-  Can_CanBus.tx_flag = 0;
+  CAN__RESET_CONTROL();
 
-  Can_resetControl();
-
-  Pio_setPinModes(Pio_Port_CanTx, Pio_Pin_CanTx, Pio_PinMode_Out);
-  Pio_setPinModes(Pio_Port_CanRx, Pio_Pin_CanRx, Pio_PinMode_In);
-  Pio_writePins(Pio_Port_CanTx, Pio_Pin_CanTx, Pio_PinState_Active);
-  Pio_setPeripheralModes(Pio_Peripheral_Can, Pio_PeripheralMode_Active);
-
-  DgusVar_beginReadWrite();
-  DgusVar_setAddressIncrement(1);
-
-  message.address = Can_BaseAddress;
-  message.length = 4;
-
-//  message.content.bytes[0] = 0x3f;
-//  message.content.bytes[1] = 0x40;
-//  message.content.bytes[2] = 0x72;
-//  message.content.bytes[3] = 0x00;
-  message.content.bytes[0] = config.baud_rate_frequency_divider;
-  message.content.bytes[1] = config.BTR0;
-  message.content.bytes[2] = config.BTR1;
-  message.content.bytes[3] = 0;
-  DgusVar_write(message);
-
+  SetPinOut(0,2);
+  SetPinIn(0,3);
+  PinOutput(0,2,1);
+  MUX_SEL |= Bits_Bit8_7;
+  ADR_H = 0xFF;
+  ADR_M = 0x00;
+  ADR_L = 0x60;
+  ADR_INC = 1;
+  RAMMODE = 0x8F;
+  while(!APP_ACK);
+  #if 0
+  DATA3 = 0x3f;
+  DATA2 = 0x40;
+  DATA1 = 0x72;
+  DATA0 = 0x00;
+  #else
+  DATA3 = config->baud_rate_frequency_divider;
+  DATA2 = config->BTR0;
+  DATA1 = config->BTR1;
+  DATA0 = 0;
+  #endif
+  APP_EN = 1;
+  while(APP_EN);
 //  DATA3 = 0;
 //  DATA2 = 0;
 //  DATA1 = 0x42;
-//  DATA0 = 0xc7;       //Ťփѩʕ¼Ĵ憷ACR
-  message.content.variables[0] = (filter.acceptance_code >> 16) & 0xFFFF;
-  message.content.variables[1] = (filter.acceptance_code >>  0) & 0xFFFF;
-  DgusVar_continueWrite(message.length, message.content);
-
+//  DATA0 = 0xc7;
+  // 0x 00 00 00 00
+  DATA3 = filter->acceptance_code.bytes[0];
+  DATA2 = filter->acceptance_code.bytes[1];
+  DATA1 = filter->acceptance_code.bytes[2];
+  DATA0 = filter->acceptance_code.bytes[3];
+  APP_EN = 1;
+  while(APP_EN);
 //  DATA3 = 0x77;
 //  DATA2 = 0xff;
 //  DATA1 = 0xbd;
-//  DATA0 = 0x00;     //ŤփAMR
-  message.content.variables[0] = (filter.acceptance_mask >> 16) & 0xFFFF;
-  message.content.variables[1] = (filter.acceptance_mask >>  0) & 0xFFFF;
-  DgusVar_continueWrite(message.length, message.content);
+//  DATA0 = 0x00;
+  // 0x FF FF FF FF
+  DATA3 = filter->acceptance_mask.bytes[0];
+  DATA2 = filter->acceptance_mask.bytes[1];
+  DATA1 = filter->acceptance_mask.bytes[2];
+  DATA0 = filter->acceptance_mask.bytes[3];
+  APP_EN = 1;
+  while(APP_EN);
+  RAMMODE = 0;
 
-  DgusVar_endReadWrite();
+  CAN__ENABLE();
+  CAN__CONFIGURE();
 
-  Can_configure();
-  Can_enable();
-
-  Interrupt_CanHandler = Can_handleInterruption;
-
-  Interrupt_enableInterruption(Interrupt_Interruption_Can);//´򿪃AN֐¶ω
+  ECAN = 1;
 }
 
-void Can_resetError(void)
+void Can_resetError(void) small
 {
-  u8 error = Can_error();
-  if (!(error & Can_Error_Passive)) return;
+  if (!(CAN_ET & Can_Error_Passive)) return;
 
-  Can_setError(error & ~Can_Error_Passive);
-  Can_softwareReset();
-  Can_CanBus.tx_flag = 0;
+  CAN_ET &= ~Can_Error_Passive;
+  CAN__RESET();
+  Can_Bus.tx_flag = Bits_State_NotSet;
 }
 
-Can_Message_t Can_rx(void)
+void LoadOneFrame(void) small
 {
-  Can_Message_t message;
-
-  if (Can_CanBus.rx.head == Can_CanBus.rx.tail)
-  {
-    message.status = 0;
-    return message;
-  }
-
-  message = Can_CanBus.rx.messages[Can_CanBus.rx.tail];
-  message.status = 1;
-
-  Can_moveBufferTail(&Can_CanBus.rx);
-
-  return message;
+  Can_Message_t *tx_message = Can_Bus.tx.messages + Can_Bus.tx.tail;
+  ADR_H = 0xFF;
+  ADR_M = 0x00;
+  ADR_L = 0x64;
+  ADR_INC = 1;
+  RAMMODE = 0x8F;
+  while(!APP_ACK);
+  DATA3 = tx_message->status;
+  DATA2 = 0;
+  DATA1 = 0;
+  DATA0 = 0;
+  APP_EN = 1;
+  while(APP_EN);
+  DATA3 = tx_message->id >> 24;
+  DATA2 = tx_message->id >> 16;
+  DATA1 = tx_message->id >>  8;
+  DATA0 = tx_message->id >>  0;
+  APP_EN = 1;
+  while(APP_EN);
+  DATA3 = tx_message->bytes[0];
+  DATA2 = tx_message->bytes[1];
+  DATA1 = tx_message->bytes[2];
+  DATA0 = tx_message->bytes[3];
+  APP_EN = 1;
+  while(APP_EN);
+  DATA3 = tx_message->bytes[4];
+  DATA2 = tx_message->bytes[5];
+  DATA1 = tx_message->bytes[6];
+  DATA0 = tx_message->bytes[7];
+  APP_EN = 1;
+  while(APP_EN);
+  Can_Bus.tx.tail = CAN__LOOP_INDEX(Can_Bus.tx.tail);
+  RAMMODE = 0;
 }
 
-void Can_tx(u32 id, u8 status, u16 n_bytes, const u8 *bytes)
+void Can_tx(u8 status, u32 id, const u8 *bytes, u16 length)
 {
-  u8 i, j, k, frame_no, frame_offset;
-  u32 id_temp, status_temp;
   Can_Message_t *tx_message;
 
-  if (2048 < n_bytes) return;
+  if (2048 < length)
+    return;
 
-  if (status & Bits_Bit8_7)
+  status &= (Can_Status_Ide | Can_Status_Rtr);
+
+  if(status & Can_Status_Ide)
   {
-    id_temp = id << 3;
+    id <<= 3;
   }
   else
   {
-    id_temp = id << 21;
+    id <<= 21;
   }
 
-  tx_message = Can_CanBus.tx.messages + Can_CanBus.tx.head;
-  if (tx_message->status & Bits_Bit8_6)
+  tx_message = Can_Bus.tx.messages + Can_Bus.tx.head;
+  if(status & Can_Status_Rtr)
   {
-    tx_message->status = status & (Bits_Bit8_7 | Bits_Bit8_6);
-    tx_message->id = id_temp;
-    Can_moveBufferHead(&Can_CanBus.tx);
+    tx_message->id = id;
+    tx_message->status = status;
+    Can_Bus.tx.head = CAN__LOOP_INDEX(Can_Bus.tx.head);
   }
   else
   {
-    frame_no = n_bytes >> 3;
-    frame_offset = n_bytes % 8;
-    k = 0;
-    status_temp = status & (Bits_Bit8_7 | Bits_Bit8_6);
-    for (i = 0; i < frame_no; ++i)
+    u8 frame, byte;
+    u8 n_frames = length >> 3;
+    u8 frame_offset = length % 8;
+    for (frame = 0; frame < n_frames; ++frame)
     {
-      tx_message = Can_CanBus.tx.messages + Can_CanBus.tx.head;
-      tx_message->status = status_temp | Bits_Bit8_3;
-      tx_message->id = id_temp;
-      for (j = 0; j < 8; ++j)
+      tx_message->id = id;
+      tx_message->status = status | Can_Length_8;
+      for(byte = 0; byte < 8; ++byte)
       {
-        tx_message->bytes[j] = bytes[k];
-        ++k;
+        tx_message->bytes[byte] = *bytes++;
       }
-      Can_moveBufferHead(&Can_CanBus.tx);
+      Can_Bus.tx.head = CAN__LOOP_INDEX(Can_Bus.tx.head);
+      tx_message = Can_Bus.tx.messages + Can_Bus.tx.head;
     }
-    if (frame_offset)
+    if(frame_offset)
     {
-      tx_message = Can_CanBus.tx.messages + Can_CanBus.tx.head;
-      tx_message->status = status_temp | frame_offset;
-      tx_message->id = id_temp;
-      for (j = 0; j < frame_offset; ++j)
+      tx_message->id = id;
+      tx_message->status = status | frame_offset;
+      for(byte = 0; byte < 8; ++byte)
       {
-        tx_message->bytes[j] = bytes[k];
-        ++k;
+        tx_message->bytes[byte]
+          = byte < frame_offset
+          ? *bytes++
+          : 0;
       }
-      for (; j < 8; ++j)
-      {
-        tx_message->bytes[j] = 0;
-      }
-      Can_moveBufferHead(&Can_CanBus.tx);
+      Can_Bus.tx.head = CAN__LOOP_INDEX(Can_Bus.tx.head);
     }
   }
-  if (!Can_CanBus.tx_flag)
+
+  if(!Can_Bus.tx_flag)
   {
-    Can_loadTxMessage();
-    Can_CanBus.tx_flag = 1;
-    Can_startTimer();
-    Can_sendMessage();
+    CAN__WAIT_SENDING();
+
+    INTERRUPT_GUARD(LoadOneFrame());
+    Can_Bus.tx_flag = Bits_State_Set;
+    INTERRUPT_GUARD(Timer_start(7, 3000));
+
+    CAN__SEND();
   }
-  if (Can_CanBus.tx_flag && Timer_timeout(CAN__TIMER_ID))
+
+  if(Can_Bus.tx_flag && Timer_timeout(7))
   {
-    Can_CanBus.tx_flag = 0;
+    Can_Bus.tx_flag = Bits_State_NotSet;
   }
 }
 
-
-// internal implementation
-
-// CAN_CR.3:
-// 0 = single (filter size = 32 bit)
-// 1 = double (filter size = 16 bit)
-void Can_resetControl(void)
+u8 Can_rx(Can_Message_t *message)
 {
-  CAN_CR = 0;
-}
-
-void Can_configure(void)
-{
-  CAN_CR |= Bits_Bit8_5;
-  while(CAN_CR & Bits_Bit8_5);  //ִАŤփFF0060-FF0062¶¯׷
-}
-
-void Can_enable(void)
-{
-  CAN_CR |= Bits_Bit8_7;
-}
-
-void Can_handleInterruption(void)
-{
-  u8 interrupt_flag = Interrupt_enabled();
-  Interrupt_disable();
-
-  if (Interrupt_canStatus() & Interrupt_CanStatus_RemoteFrame)
+  if (Can_Bus.rx.head == Can_Bus.rx.tail)
   {
-    // @attention У китайцев сбрасывается два бита, но это не похоже на обработку остальных сатусов
-    Interrupt_setCanStatus(
-      Interrupt_canStatus() & ~(Interrupt_CanStatus_RemoteFrame | Interrupt_CanStatus_Recieve)
-    );
+    return 0;
   }
-  if (
-    Interrupt_canStatus() & Interrupt_CanStatus_Recieve
-  )
+
+  (*message) = Can_Bus.rx.messages[Can_Bus.rx.tail];
+  Can_Bus.rx.tail = CAN__LOOP_INDEX(Can_Bus.rx.tail);
+
+  return 1;
+}
+
+void Can_handleInterruption(void) small interrupt 9
+{
+  u8 status;
+
+  DISABLE_INTERRUPT();
+  if(CAN_IR & Bits_Bit8_7)
   {
-    DgusVar_Message_t message;
-    Can_Message_t *rx_message = Can_CanBus.rx.messages + Can_CanBus.rx.head;
-    u8 i;
+    CAN_IR &= ~(Bits_Bit8_7 | Bits_Bit8_6);
+  }
+  if(CAN_IR & Bits_Bit8_6)
+  {
+    Can_Message_t *rx_message = Can_Bus.rx.messages + Can_Bus.rx.head;
 
-    Interrupt_setCanStatus(
-      Interrupt_canStatus() & ~Interrupt_CanStatus_Recieve
-    );
+    CAN_IR &= ~(Bits_Bit8_6);
+    ADR_H = 0xFF;
+    ADR_M = 0x00;
+    ADR_L = 0x68;
+    ADR_INC = 1;
+    RAMMODE = 0xAF;
+    while(!APP_ACK);
+    APP_EN = 1;
+    while(APP_EN);
+    status = DATA3;
+    rx_message->status = status;
+    APP_EN = 1;
+    while(APP_EN);
 
-    DgusVar_beginReadWrite();
-    DgusVar_setAddressIncrement(1);
-
-    message.address = Can_BaseAddress;
-    message.address.bytes.low += 8;
-    message.length = 1;
-
-    message.content = DgusVar_read(message.address, message.length);
-    rx_message->status = message.content.bytes[0];
-
-    message.length = 4;
-    message.content = DgusVar_continueRead(message.length);
-
-    for (i = 0; i < 4; ++i)
-    {
-      rx_message->id <<= 8;
-      rx_message->id |= message.content.bytes[i];
-    }
+    rx_message->id <<= 8;
+    rx_message->id |= DATA3;
+    rx_message->id <<= 8;
+    rx_message->id |= DATA2;
+    rx_message->id <<= 8;
+    rx_message->id |= DATA1;
+    rx_message->id <<= 8;
+    rx_message->id |= DATA0;
     rx_message->id >>= 3;
 
-    if (!(rx_message->status & Bits_Bit8_7))
+    if(!(status & Bits_Bit8_7))
     {
       rx_message->id >>= 18;
     }
-    if (!(rx_message->status & Bits_Bit8_6))
+    if(!(status & Bits_Bit8_6))
     {
-      message.length = 4;
-      message.content = DgusVar_continueRead(message.length);
-      for (i = 0; i < 4; ++i)
-      {
-        rx_message->bytes[i] = message.content.bytes[i];
-      }
-
-      message.length = 4;
-      message.content = DgusVar_continueRead(message.length);
-      for (i = 4; i < 8; ++i)
-      {
-        rx_message->bytes[i] = message.content.bytes[i - 4];
-      }
+      APP_EN = 1;
+      while(APP_EN);
+      rx_message->bytes[0] = DATA3;
+      rx_message->bytes[1] = DATA2;
+      rx_message->bytes[2] = DATA1;
+      rx_message->bytes[3] = DATA0;
+      APP_EN = 1;
+      while(APP_EN);
+      rx_message->bytes[4] = DATA3;
+      rx_message->bytes[5] = DATA2;
+      rx_message->bytes[6] = DATA1;
+      rx_message->bytes[7] = DATA0;
     }
-
-    DgusVar_endReadWrite();
-
-    Can_moveBufferHead(&Can_CanBus.rx);
+    RAMMODE = 0;
+    Can_Bus.rx.head = CAN__LOOP_INDEX(Can_Bus.rx.head);
   }
-  if (
-    Interrupt_canStatus() & Interrupt_CanStatus_Send
-  )
+  if(CAN_IR & Bits_Bit8_5)
   {
-    Interrupt_setCanStatus(
-      Interrupt_canStatus() & ~Interrupt_CanStatus_Send
-    );
-    if(Can_CanBus.tx.tail != Can_CanBus.tx.head)
+    CAN_IR &= ~Bits_Bit8_5;
+    if(Can_Bus.tx.tail != Can_Bus.tx.head)
     {
-      Can_loadTxMessage();
-      Can_sendMessage();
-      Can_startTimer();
+      CAN__WAIT_SENDING();
+
+      LoadOneFrame();
+      Timer_start(7, 3000);
+
+      CAN__SEND();
     }
     else
     {
-      Can_CanBus.tx_flag = 0;
+      Can_Bus.tx_flag = Bits_State_NotSet;
     }
   }
-  if (
-    Interrupt_canStatus() & Interrupt_CanStatus_Overflow
-  )
+  if(CAN_IR & Bits_Bit8_4)
   {
-    Interrupt_setCanStatus(
-      Interrupt_canStatus() & ~Interrupt_CanStatus_Overflow
-    );
+    CAN_IR &= ~Bits_Bit8_4;
   }
-  if (
-    Interrupt_canStatus() & Interrupt_CanStatus_Error
-  )
+  if(CAN_IR & Bits_Bit8_3)
   {
-    Interrupt_setCanStatus(
-      Interrupt_canStatus() & ~Interrupt_CanStatus_Error
-    );
+    CAN_IR &= ~Bits_Bit8_3;
   }
-  if (
-    Interrupt_canStatus() & Interrupt_CanStatus_SendArbitrationFailure
-  )
+  if(CAN_IR & Bits_Bit8_2)
   {
-    Interrupt_setCanStatus(
-      Interrupt_canStatus() & ~Interrupt_CanStatus_SendArbitrationFailure
-    );
-    Can_sendMessage();
+    CAN_IR &= ~Bits_Bit8_2;
+    CAN__SEND();
   }
-  Can_setError(0);
-
-  Interrupt_restore(interrupt_flag);
+  CAN_ET = 0;
+  ENABLE_INTERRUPT();
 }
 
-u8 Can_error(void)
-{
-  return CAN_ET;
-}
 
-void Can_setError(u8 error)
-{
-  CAN_ET = error;
-}
-
-void Can_softwareReset(void)
-{
-  CAN_CR |= 1 << 6;
-  sys_delay_ms(1);
-  CAN_CR &= ~(1 << 6);
-}
-
-void Can_loadTxMessage(void)
-{
-  DgusVar_Message_t message;
-  Can_Message_t *can_message = Can_CanBus.tx.messages + Can_CanBus.tx.tail;
-  u8 i;
-
-  DgusVar_beginReadWrite();
-  DgusVar_setAddressIncrement(1);
-
-  message.address = Can_BaseAddress;
-  message.address.bytes.low += 4;
-  message.length = 4;
-
-  message.content.bytes[0] = can_message->status;
-  message.content.bytes[1] = 0;
-  message.content.bytes[2] = 0;
-  message.content.bytes[3] = 0;
-  DgusVar_write(message);
-
-  message.content.bytes[0] = (u8) (can_message->id >> 24);
-  message.content.bytes[1] = (u8) (can_message->id >> 16);
-  message.content.bytes[2] = (u8) (can_message->id >>  8);
-  message.content.bytes[3] = (u8) (can_message->id >>  0);
-  DgusVar_continueWrite(message.length, message.content);
-
-  for (i = 0; i < 4; ++i) message.content.bytes[i] = can_message->bytes[i];
-  DgusVar_continueWrite(message.length, message.content);
-
-  for (i = 4; i < 8; ++i) message.content.bytes[i - 4] = can_message->bytes[i];
-  DgusVar_continueWrite(message.length, message.content);
-
-  DgusVar_endReadWrite();
-
-  Can_moveBufferTail(&Can_CanBus.tx);
-}
-
-void Can_sendMessage(void)
-{
-  CAN_CR |= Bits_Bit8_2;
-}
-
-void Can_moveBufferHead(Can_BusBuffer_t *buffer)
-{
-  buffer->head += 1;
-  buffer->head %= CAN__BUFFER_SIZE;
-
-  if (buffer->head == buffer->tail)
-  {
-    Can_moveBufferTail(buffer);
-  }
-}
-
-void Can_moveBufferTail(Can_BusBuffer_t *buffer)
-{
-  buffer->tail += 1;
-  buffer->tail %= CAN__BUFFER_SIZE;
-}
-
-void Can_startTimer(void)
-{
-  Timer_start(CAN__TIMER_ID, CAN__TIMER_DURATION);
-}
