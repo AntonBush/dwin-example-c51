@@ -264,7 +264,7 @@ u8 Can_rx(Can_Message_t *message)
 
 void Can_handleInterruption(void) small interrupt 9
 {
-  u8 status;
+  u16 ignore;
 
   DISABLE_INTERRUPT();
   if(CAN_IR & Bits_Bit8_7)
@@ -273,52 +273,37 @@ void Can_handleInterruption(void) small interrupt 9
   }
   if(CAN_IR & Bits_Bit8_6)
   {
+    DgusVar_BufferPointer_t rx_buffer = DgusVar_RxBuffer;
     Can_Message_t *rx_message = Can_Bus.rx.messages + Can_Bus.rx.head;
 
     CAN_IR &= ~(Bits_Bit8_6);
-    ADR_H = 0xFF;
-    ADR_M = 0x00;
-    ADR_L = 0x68;
-    ADR_INC = 1;
-    RAMMODE = 0xAF;
-    while(!APP_ACK);
-    APP_EN = 1;
-    while(APP_EN);
-    status = DATA3;
-    rx_message->status = status;
-    APP_EN = 1;
-    while(APP_EN);
 
-    rx_message->id <<= 8;
-    rx_message->id |= DATA3;
-    rx_message->id <<= 8;
-    rx_message->id |= DATA2;
-    rx_message->id <<= 8;
-    rx_message->id |= DATA1;
-    rx_message->id <<= 8;
-    rx_message->id |= DATA0;
+    DgusVar_read((DGUSVAR__CAN_ADDRESS + 8) << 1, 8);
+
+    rx_message->status = DGUSVAR__READ_U8_FROM_BUFFER(rx_buffer);
+    ignore = DGUSVAR__READ_U8_FROM_BUFFER(rx_buffer);
+    ignore = DGUSVAR__READ_U16_FROM_BUFFER(rx_buffer);
+
+    rx_message->id = DGUSVAR__READ_U32_FROM_BUFFER(rx_buffer);
     rx_message->id >>= 3;
 
-    if(!(status & Bits_Bit8_7))
+    if(!(rx_message->status & Bits_Bit8_7))
     {
       rx_message->id >>= 18;
     }
-    if(!(status & Bits_Bit8_6))
+
+    if(!(rx_message->status & Bits_Bit8_6))
     {
-      APP_EN = 1;
-      while(APP_EN);
-      rx_message->bytes[0] = DATA3;
-      rx_message->bytes[1] = DATA2;
-      rx_message->bytes[2] = DATA1;
-      rx_message->bytes[3] = DATA0;
-      APP_EN = 1;
-      while(APP_EN);
-      rx_message->bytes[4] = DATA3;
-      rx_message->bytes[5] = DATA2;
-      rx_message->bytes[6] = DATA1;
-      rx_message->bytes[7] = DATA0;
+      rx_message->bytes[0] = DGUSVAR__READ_U8_FROM_BUFFER(rx_buffer);
+      rx_message->bytes[1] = DGUSVAR__READ_U8_FROM_BUFFER(rx_buffer);
+      rx_message->bytes[2] = DGUSVAR__READ_U8_FROM_BUFFER(rx_buffer);
+      rx_message->bytes[3] = DGUSVAR__READ_U8_FROM_BUFFER(rx_buffer);
+      rx_message->bytes[4] = DGUSVAR__READ_U8_FROM_BUFFER(rx_buffer);
+      rx_message->bytes[5] = DGUSVAR__READ_U8_FROM_BUFFER(rx_buffer);
+      rx_message->bytes[6] = DGUSVAR__READ_U8_FROM_BUFFER(rx_buffer);
+      rx_message->bytes[7] = DGUSVAR__READ_U8_FROM_BUFFER(rx_buffer);
     }
-    RAMMODE = 0;
+
     Can_Bus.rx.head = CAN__LOOP_INDEX(Can_Bus.rx.head);
   }
   if(CAN_IR & Bits_Bit8_5)
