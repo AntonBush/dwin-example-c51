@@ -1,6 +1,7 @@
 #include "driver/can.h"
 
 #include "driver/timer.h"
+#include "driver/pio.h"
 #include "driver/sys.h"
 
 #define CAN__RESET_CONTROL() CAN_CR = 0
@@ -88,10 +89,10 @@ void Can_init(
 
   CAN__RESET_CONTROL();
 
-  SetPinOut(0,2);
-  SetPinIn(0,3);
-  PinOutput(0,2,1);
-  MUX_SEL |= Bits_Bit8_7;
+  Pio_setPinModes(Pio_Port_CanTx, Pio_Pin_CanTx, Pio_PinMode_Out);
+  Pio_setPinModes(Pio_Port_CanRx, Pio_Pin_CanRx, Pio_PinMode_In);
+  Pio_writePins(Pio_Port_CanTx, Pio_Pin_CanTx, Bits_State_Set);
+  Pio_setPeripheralModes(Pio_Peripheral_Can, Bits_State_Set);
   ADR_H = 0xFF;
   ADR_M = 0x00;
   ADR_L = 0x60;

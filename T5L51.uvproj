@@ -387,6 +387,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\driver\timer.c</FilePath>
             </File>
+            <File>
+              <FileName>pio.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\driver\pio.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -411,6 +416,16 @@
               <FileName>ui.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\app\ui.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>lib</GroupName>
+          <Files>
+            <File>
+              <FileName>bytevector.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\lib\bytevector.c</FilePath>
             </File>
           </Files>
         </Group>

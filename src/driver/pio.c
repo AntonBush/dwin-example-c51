@@ -45,11 +45,11 @@ void Pio_setPeripherals(u8 peripherals)
   MUX_SEL = peripherals;
 }
 
-void Pio_setPeripheralModes(u8 peripherals, Pio_PeripheralMode_t mode)
+void Pio_setPeripheralModes(u8 peripherals, Bits_State_t mode)
 {
   u8 old_mode = MUX_SEL;
   MUX_SEL
-    = mode == Pio_PeripheralMode_Active
+    = mode == Bits_State_Set
     ? old_mode | peripherals
     : old_mode & (~peripherals);
 }
@@ -100,11 +100,11 @@ void Pio_writePort(Pio_Port_t port, u8 state)
   }
 }
 
-void Pio_writePins(Pio_Port_t port, u8 pins, Pio_PinState_t state)
+void Pio_writePins(Pio_Port_t port, u8 pins, Bits_State_t state)
 {
   u8 old_state = Pio_readPort(port);
   u8 new_state
-    = state == Pio_PinState_Active
+    = state == Bits_State_Set
     ? old_state | pins
     : old_state & (~pins);
   Pio_writePort(port, new_state);

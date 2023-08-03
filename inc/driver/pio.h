@@ -46,27 +46,15 @@ typedef enum Pio_Peripheral
   , Pio_Peripheral_Can = Bits_Bit8_7
 } Pio_Peripheral_t;
 
-typedef enum Pio_PeripheralMode
-{
-  Pio_PeripheralMode_Passive
-  , Pio_PeripheralMode_Active
-} Pio_PeripheralMode_t;
-
-typedef enum Pio_PinState
-{
-  Pio_PinState_Passive
-  , Pio_PinState_Active
-} Pio_PinState_t;
-
 void Pio_setPortMode(Pio_Port_t port, u8 mode);
 void Pio_setPinModes(Pio_Port_t port, u8 pins, Pio_PinMode_t mode);
 void Pio_setPeripherals(u8 peripherals);
-void Pio_setPeripheralModes(u8 peripherals, Pio_PeripheralMode_t mode); 
+void Pio_setPeripheralModes(u8 peripherals, Bits_State_t mode);
 
 u8 Pio_readPort(Pio_Port_t port);
 u8 Pio_readPins(Pio_Port_t port, u8 pins);
 void Pio_writePort(Pio_Port_t port, u8 state);
-void Pio_writePins(Pio_Port_t port, u8 pins, Pio_PinState_t state);
+void Pio_writePins(Pio_Port_t port, u8 pins, Bits_State_t state);
 
 #endif
 

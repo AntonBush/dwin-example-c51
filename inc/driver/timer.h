@@ -1,7 +1,6 @@
 #ifndef __TIMER_H__
 #define __TIMER_H__
 
-#include "driver/sys.h"
 #include "lib/int.h"
 
 extern u8 data Timer_Tick;

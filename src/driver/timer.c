@@ -33,8 +33,8 @@ void Timer_init(void)
 {
   TIMER__STOP_TIMER_0();
 
-  Timer_TimeoutFlags = 0;
   Timer_EnableFlags = 0;
+  Timer_TimeoutFlags = 0;
 
   TMOD = (
     TIMER__MODE_TIMER_0(Timer_Mode_16Bit)

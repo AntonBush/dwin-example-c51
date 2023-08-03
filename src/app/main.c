@@ -17,6 +17,7 @@ INTERRUPT_GUARD(Timer_start(LOGIC_TIMER_ID, LOGIC_TIMER_DURATION))
 #define START_CAN_TX_TIMER() \
 INTERRUPT_GUARD(Timer_start(CAN_TX_TIMER_ID, CAN_TX_TIMER_DURATION))
 
+Logic_Data_t xdata logic;
 
 void init(void);
 void canTxControl(void);
@@ -25,8 +26,6 @@ void logicControl(void);
 void main(void)
 {
   init();
-
-  ENABLE_INTERRUPT();
 
   START_LOGIC_TIMER();
   START_CAN_TX_TIMER();
@@ -62,11 +61,13 @@ void init(void)
   //sys_init(); // инициализация основных регистров
   Timer_init();
   Can_init(&can_config, &can_filter);
+  Logic_init(&logic);
+
+  ENABLE_INTERRUPT();
 }
 
 void logicControl(void)
 {
-  static Logic_Data_t xdata logic;
   Can_Message_t message;
 
   //logic.dashboardParams.iterationsCount++;
