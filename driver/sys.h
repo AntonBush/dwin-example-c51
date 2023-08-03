@@ -24,7 +24,4 @@ ENABLE_INTERRUPT();
 // определение функций
 void sys_init(void);
 
-void write_dgus_vp(u16 addr,u8* buf,u16 len);
-void read_dgus_vp(u16 addr,u8* buf,u16 len);
-
 #endif

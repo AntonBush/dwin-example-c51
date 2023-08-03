@@ -159,5 +159,8 @@ void Ui_update(Ui_MainPage_t *page)
 
 //  DgusVar_endReadWrite();
 //  write_dgus_vp(VPMAP__TANK_VALVE_OPEN, (u8 *)buffer, buffer_size << 1);
-  DgusVar_write(VPMAP__TANK_VALVE_OPEN, DGUSVAR__FILLED_BUFFER_SIZE(tx_buffer, DgusVar_TxBuffer));
+  DgusVar_write(
+    VPMAP__TANK_VALVE_OPEN
+    , DGUSVAR__FILLED_BUFFER_SIZE(tx_buffer, DgusVar_TxBuffer)
+  );
 }

@@ -2,6 +2,7 @@
 
 #include "driver/timer.h"
 #include "driver/pio.h"
+#include "driver/dgusvar.h"
 #include "driver/sys.h"
 
 #define CAN__RESET_CONTROL() CAN_CR = 0
@@ -83,6 +84,8 @@ void Can_init(
   , const Can_Filter_t *filter
 )
 {
+  DgusVar_BufferPointer_t tx_buffer = DgusVar_TxBuffer;
+
   Can_Bus.rx.head = 0;
   Can_Bus.rx.tail = 0;
   Can_Bus.tx.head = 0;
@@ -95,48 +98,39 @@ void Can_init(
   Pio_setPinModes(Pio_Port_CanRx, Pio_Pin_CanRx, Pio_PinMode_In);
   Pio_writePins(Pio_Port_CanTx, Pio_Pin_CanTx, Bits_State_Set);
   Pio_setPeripheralModes(Pio_Peripheral_Can, Bits_State_Set);
-  ADR_H = 0xFF;
-  ADR_M = 0x00;
-  ADR_L = 0x60;
-  ADR_INC = 1;
-  RAMMODE = 0x8F;
-  while(!APP_ACK);
-  #if 0
-  DATA3 = 0x3f;
-  DATA2 = 0x40;
-  DATA1 = 0x72;
-  DATA0 = 0x00;
-  #else
-  DATA3 = config->baud_rate_frequency_divider;
-  DATA2 = config->BTR0;
-  DATA1 = config->BTR1;
-  DATA0 = 0;
-  #endif
-  APP_EN = 1;
-  while(APP_EN);
+
+  DGUSVAR__WRITE_U8_TO_BUFFER(
+    tx_buffer
+    , config->baud_rate_frequency_divider
+  );
+  DGUSVAR__WRITE_U8_TO_BUFFER(tx_buffer, config->BTR0);
+  DGUSVAR__WRITE_U8_TO_BUFFER(tx_buffer, config->BTR1);
+  DGUSVAR__WRITE_U8_TO_BUFFER(tx_buffer, 0);
+
 //  DATA3 = 0;
 //  DATA2 = 0;
 //  DATA1 = 0x42;
 //  DATA0 = 0xc7;
   // 0x 00 00 00 00
-  DATA3 = filter->acceptance_code.bytes[0];
-  DATA2 = filter->acceptance_code.bytes[1];
-  DATA1 = filter->acceptance_code.bytes[2];
-  DATA0 = filter->acceptance_code.bytes[3];
-  APP_EN = 1;
-  while(APP_EN);
+  DGUSVAR__WRITE_U32_TO_BUFFER(
+    tx_buffer
+    , filter->acceptance_code.value
+  );
+
 //  DATA3 = 0x77;
 //  DATA2 = 0xff;
 //  DATA1 = 0xbd;
 //  DATA0 = 0x00;
   // 0x FF FF FF FF
-  DATA3 = filter->acceptance_mask.bytes[0];
-  DATA2 = filter->acceptance_mask.bytes[1];
-  DATA1 = filter->acceptance_mask.bytes[2];
-  DATA0 = filter->acceptance_mask.bytes[3];
-  APP_EN = 1;
-  while(APP_EN);
-  RAMMODE = 0;
+  DGUSVAR__WRITE_U32_TO_BUFFER(
+    tx_buffer
+    , filter->acceptance_mask.value
+  );
+
+  DgusVar_write(
+    DGUSVAR__CAN_ADDRESS << 1
+    , DGUSVAR__FILLED_BUFFER_SIZE(tx_buffer, DgusVar_TxBuffer)
+  );
 
   CAN__ENABLE();
   CAN__CONFIGURE();
@@ -155,39 +149,31 @@ void Can_resetError(void) small
 
 void LoadOneFrame(void) small
 {
+  DgusVar_BufferPointer_t tx_buffer = DgusVar_TxBuffer;
   Can_Message_t *tx_message = Can_Bus.tx.messages + Can_Bus.tx.tail;
-  ADR_H = 0xFF;
-  ADR_M = 0x00;
-  ADR_L = 0x64;
-  ADR_INC = 1;
-  RAMMODE = 0x8F;
-  while(!APP_ACK);
-  DATA3 = tx_message->status;
-  DATA2 = 0;
-  DATA1 = 0;
-  DATA0 = 0;
-  APP_EN = 1;
-  while(APP_EN);
-  DATA3 = tx_message->id >> 24;
-  DATA2 = tx_message->id >> 16;
-  DATA1 = tx_message->id >>  8;
-  DATA0 = tx_message->id >>  0;
-  APP_EN = 1;
-  while(APP_EN);
-  DATA3 = tx_message->bytes[0];
-  DATA2 = tx_message->bytes[1];
-  DATA1 = tx_message->bytes[2];
-  DATA0 = tx_message->bytes[3];
-  APP_EN = 1;
-  while(APP_EN);
-  DATA3 = tx_message->bytes[4];
-  DATA2 = tx_message->bytes[5];
-  DATA1 = tx_message->bytes[6];
-  DATA0 = tx_message->bytes[7];
-  APP_EN = 1;
-  while(APP_EN);
+
+  DGUSVAR__WRITE_U8_TO_BUFFER(tx_buffer, tx_message->status);
+  DGUSVAR__WRITE_U8_TO_BUFFER(tx_buffer, 0);
+  DGUSVAR__WRITE_U16_TO_BUFFER(tx_buffer, 0);
+
+  DGUSVAR__WRITE_U32_TO_BUFFER(tx_buffer, tx_message->id);
+
+  DGUSVAR__WRITE_U8_TO_BUFFER(tx_buffer, tx_message->bytes[0]);
+  DGUSVAR__WRITE_U8_TO_BUFFER(tx_buffer, tx_message->bytes[1]);
+  DGUSVAR__WRITE_U8_TO_BUFFER(tx_buffer, tx_message->bytes[2]);
+  DGUSVAR__WRITE_U8_TO_BUFFER(tx_buffer, tx_message->bytes[3]);
+
+  DGUSVAR__WRITE_U8_TO_BUFFER(tx_buffer, tx_message->bytes[4]);
+  DGUSVAR__WRITE_U8_TO_BUFFER(tx_buffer, tx_message->bytes[5]);
+  DGUSVAR__WRITE_U8_TO_BUFFER(tx_buffer, tx_message->bytes[6]);
+  DGUSVAR__WRITE_U8_TO_BUFFER(tx_buffer, tx_message->bytes[7]);
+
+  DgusVar_write(
+    (DGUSVAR__CAN_ADDRESS + 4) << 1
+    , DGUSVAR__FILLED_BUFFER_SIZE(tx_buffer, DgusVar_TxBuffer)
+  );
+
   Can_Bus.tx.tail = CAN__LOOP_INDEX(Can_Bus.tx.tail);
-  RAMMODE = 0;
 }
 
 void Can_tx(u8 status, u32 id, const u8 *bytes, u16 length)
