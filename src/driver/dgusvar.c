@@ -1,7 +1,35 @@
 #include "driver/dgusvar.h"
 
 #include "driver/sys.h"
-#include "driver/interrupt.h"
+#include "lib/bits.h"
+
+#include <math.h>
+
+#define DGUSVAR__BEGIN_READ_WRITE() \
+APP_REQ = 1; \
+do {} while (!APP_ACK)
+
+#define DGUSVAR__END_READ_WRITE() \
+RAMMODE = 0;
+
+#define DGUSVAR__SET_ADDRESS(address) \
+ADR_H = (address) >> 16; \
+ADR_M = (address) >>  8; \
+ADR_L = (address) >>  0
+
+#define DGUSVAR__SET_ADDRESS_INCREMENT(adr_inc) \
+ADR_INC = (adr_inc)
+
+#define DGUSVAR__SELECT_FIRST_BYTES(count) \
+RAMMODE = RAMMODE & 0xF0 | (16 - (1 << (4 - (count))))
+
+#define DGUSVAR__SELECT_LAST_BYTES(count) \
+RAMMODE = RAMMODE & 0xF0 | ((1 << (count)) - 1)
+
+#define DGUSVAR__PERFORM_OPERATION(mode) \
+APP_RW = (mode); \
+APP_EN = 1; \
+do {} while (APP_EN)
 
 typedef enum DgusVar_Mode
 {
@@ -9,155 +37,104 @@ typedef enum DgusVar_Mode
   , DgusVar_Mode_Write = 0
 } DgusVar_Mode_t;
 
-static void DgusVar_setAddress(DgusVar_Address_t address);
-static void DgusVar_selectBytes(u8 count);
-static void DgusVar_performOperation(DgusVar_Mode_t mode);
+u8 xdata DgusVar_RxBuffer[DGUSVAR__BUFFER_SIZE];
+u8 xdata DgusVar_TxBuffer[DGUSVAR__BUFFER_SIZE];
 
-DgusVar_Address_t DgusVar_newAddress(u32 address)
+void DgusVar_read(u32 variable_address, u16 n_variables) small
 {
-  DgusVar_Address_t new_address;
-  new_address.bytes.high = address >> 16;
-  new_address.bytes.middle = address >> 8;
-  new_address.bytes.low = address >> 0;
-  return new_address;
-}
+  DgusVar_BufferPointer_t rx_buffer = DgusVar_RxBuffer;
 
-DgusVar_Address_t DgusVar_newVpAddress(u16 address)
-{
-  DgusVar_Address_t new_address;
-  new_address.bytes.high = 0;
-  new_address.bytes.middle = address >> 9;
-  new_address.bytes.low = address >> 1;
-  return new_address;
-}
+  if(n_variables == 0) return;
 
-DgusVar_Data_t DgusVar_newData(u32 content)
-{
-  DgusVar_Data_t new_data;
-  new_data.variables[1] = content >> 16;
-  new_data.variables[0] = content >> 0;
-  return new_data;
-}
-
-DgusVar_Data_t DgusVar_newRawData(u8 *bytes, u8 length)
-{
-  DgusVar_Data_t new_data;
-  u8 i;
-  for (i = 0; i < 4; ++i)
+  if (DGUSVAR__BUFFER_SIZE < n_variables)
   {
-    new_data.bytes[i] = i < length ? bytes[i] : 0;
-  }
-  return new_data;
-}
-
-DgusVar_Data_t DgusVar_newVariableData(u16 *variables, u8 count)
-{
-  DgusVar_Data_t new_data;
-  u8 i;
-  for (i = 0; i < 2; ++i)
-  {
-    new_data.variables[i] = i < count ? variables[i] : 0;
-  }
-  return new_data;
-}
-
-DgusVar_Message_t DgusVar_newMessage(
-  DgusVar_Address_t address
-  , u8 length
-  , DgusVar_Data_t content
-)
-{
-  DgusVar_Message_t new_message;
-  new_message.address = address;
-  new_message.length = length;
-  new_message.content = content;
-  return new_message;
-}
-
-void DgusVar_beginReadWrite(void)
-{
-  APP_REQ = 1;
-  while (!APP_ACK);
-}
-
-void DgusVar_endReadWrite(void)
-{
-  RAMMODE = 0;
-}
-
-void DgusVar_setAddressIncrement(u8 increment)
-{
-  ADR_INC = increment;
-}
-
-DgusVar_Data_t DgusVar_read(DgusVar_Address_t address, u8 length)
-{
-  DgusVar_setAddress(address);
-  return DgusVar_continueRead(length);
-}
-
-void DgusVar_write(DgusVar_Message_t message)
-{
-  DgusVar_setAddress(message.address);
-  DgusVar_continueWrite(message.length, message.content);
-}
-
-DgusVar_Data_t DgusVar_continueRead(u8 length)
-{
-  DgusVar_Data_t read_data;
-
-  DgusVar_selectBytes(length);
-  DgusVar_performOperation(DgusVar_Mode_Read);
-
-  read_data.bytes[0] = DATA3;
-  read_data.bytes[1] = DATA2;
-  read_data.bytes[2] = DATA1;
-  read_data.bytes[3] = DATA0;
-
-  return read_data;
-}
-
-void DgusVar_continueWrite(u8 length, DgusVar_Data_t content)
-{
-  DATA3 = content.bytes[0];
-  DATA2 = content.bytes[1];
-  DATA1 = content.bytes[2];
-  DATA0 = content.bytes[3];
-
-  DgusVar_selectBytes(length);
-  DgusVar_performOperation(DgusVar_Mode_Write);
-}
-
-void DgusVar_setAddress(DgusVar_Address_t address)
-{
-  ADR_H = address.bytes.high;
-  ADR_M = address.bytes.middle;
-  ADR_L = address.bytes.low;
-}
-
-void DgusVar_selectBytes(u8 count)
-{
-  u8 byte_mask = 0;
-
-  if (4 < count) count = 4;
-
-  for (; count != 0; --count)
-  {
-    byte_mask >>= 1;
-    byte_mask |= Bits_Bit8_3;
+    n_variables = DGUSVAR__BUFFER_SIZE;
   }
 
-  RAMMODE = (RAMMODE & 0xF0) | byte_mask;
+  DGUSVAR__SET_ADDRESS(variable_address >> 1);
+  DGUSVAR__SET_ADDRESS_INCREMENT(1);
+
+  DGUSVAR__BEGIN_READ_WRITE();
+
+  if (variable_address & Bits_Bit8_0)
+  {
+    DGUSVAR__SELECT_LAST_BYTES(2);
+    DGUSVAR__PERFORM_OPERATION(DgusVar_Mode_Read);
+
+    DGUSVAR__WRITE_U8_TO_BUFFER(rx_buffer, DATA1);
+    DGUSVAR__WRITE_U8_TO_BUFFER(rx_buffer, DATA0);
+    --n_variables;
+  }
+
+  DGUSVAR__SELECT_FIRST_BYTES(4);
+  for (; 1 < n_variables; n_variables -= 2)
+  {
+    DGUSVAR__PERFORM_OPERATION(DgusVar_Mode_Read);
+
+    DGUSVAR__WRITE_U8_TO_BUFFER(rx_buffer, DATA3);
+    DGUSVAR__WRITE_U8_TO_BUFFER(rx_buffer, DATA2);
+    DGUSVAR__WRITE_U8_TO_BUFFER(rx_buffer, DATA1);
+    DGUSVAR__WRITE_U8_TO_BUFFER(rx_buffer, DATA0);
+  }
+
+  if (n_variables != 0)
+  {
+    DGUSVAR__SELECT_FIRST_BYTES(2);
+    DGUSVAR__PERFORM_OPERATION(DgusVar_Mode_Read);
+
+    DGUSVAR__WRITE_U8_TO_BUFFER(rx_buffer, DATA3);
+    DGUSVAR__WRITE_U8_TO_BUFFER(rx_buffer, DATA2);
+  }
+
+  DGUSVAR__END_READ_WRITE();
 }
 
-void DgusVar_performOperation(DgusVar_Mode_t mode)
+void DgusVar_write(u32 variable_address, u16 n_variables) small
 {
-  u8 interrupt_flag = EA; // Interrupt_enabled();
-  EA = 0; // Interrupt_disable();
+  DgusVar_BufferPointer_t tx_buffer = DgusVar_TxBuffer;
 
-  APP_RW = mode;
-  APP_EN = 1;
-  while (APP_EN);
+  if(n_variables == 0) return;
 
-  if (interrupt_flag) EA = 1; // Interrupt_restore(interrupt_flag);
+  if (DGUSVAR__BUFFER_SIZE < n_variables)
+  {
+    n_variables = DGUSVAR__BUFFER_SIZE;
+  }
+
+  DGUSVAR__SET_ADDRESS(variable_address >> 1);
+  DGUSVAR__SET_ADDRESS_INCREMENT(1);
+
+  DGUSVAR__BEGIN_READ_WRITE();
+
+  if (variable_address & Bits_Bit8_0)
+  {
+    DATA1 = DGUSVAR__READ_U8_FROM_BUFFER(tx_buffer);
+    DATA0 = DGUSVAR__READ_U8_FROM_BUFFER(tx_buffer);
+
+    DGUSVAR__SELECT_LAST_BYTES(2);
+    DGUSVAR__PERFORM_OPERATION(DgusVar_Mode_Write);
+
+    --n_variables;
+  }
+
+  DGUSVAR__SELECT_FIRST_BYTES(4);
+  for (; 1 < n_variables; n_variables -= 2)
+  {
+    DATA3 = DGUSVAR__READ_U8_FROM_BUFFER(tx_buffer);
+    DATA2 = DGUSVAR__READ_U8_FROM_BUFFER(tx_buffer);
+    DATA1 = DGUSVAR__READ_U8_FROM_BUFFER(tx_buffer);
+    DATA0 = DGUSVAR__READ_U8_FROM_BUFFER(tx_buffer);
+
+    DGUSVAR__PERFORM_OPERATION(DgusVar_Mode_Write);
+  }
+
+  if (n_variables != 0)
+  {
+    DATA3 = DGUSVAR__READ_U8_FROM_BUFFER(tx_buffer);
+    DATA2 = DGUSVAR__READ_U8_FROM_BUFFER(tx_buffer);
+
+    DGUSVAR__SELECT_FIRST_BYTES(2);
+    DGUSVAR__PERFORM_OPERATION(DgusVar_Mode_Write);
+  }
+
+  DGUSVAR__END_READ_WRITE();
 }

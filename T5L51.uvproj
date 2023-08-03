@@ -392,6 +392,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\driver\pio.c</FilePath>
             </File>
+            <File>
+              <FileName>dgusvar.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\driver\dgusvar.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -426,6 +431,11 @@
               <FileName>bytevector.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\lib\bytevector.c</FilePath>
+            </File>
+            <File>
+              <FileName>round.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\lib\round.c</FilePath>
             </File>
           </Files>
         </Group>

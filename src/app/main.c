@@ -54,6 +54,9 @@ void init(void)
   //   , 1M{ 0x07, 0x40, 0x72 }
   Can_InitConfig_t can_config = { 0x1F, 0x40, 0x72 };
   Can_Filter_t can_filter;
+
+  DISABLE_INTERRUPT();
+
   can_filter.acceptance_code.value = 0;
   can_filter.acceptance_mask.value = ~(u32)0;
 

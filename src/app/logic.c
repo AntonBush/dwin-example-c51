@@ -1,11 +1,7 @@
 #include "app/logic.h"
 
-//
-#include "math.h"
-static float round(float v)
-{
-  return floor(v + 0.5);
-}
+#include "driver/sys.h"
+#include "lib/round.h"
 
 static void Logic_updateMainPage(Logic_Data_t *logic);
 
@@ -42,7 +38,7 @@ void Logic_update(Logic_Data_t *logic)
   }
 
   Logic_updateMainPage(logic);
-  Ui_update(&(logic->ui));
+  INTERRUPT_GUARD(Ui_update(&(logic->ui)));
 }
 
 void Logic_updateMainPage(Logic_Data_t *logic)

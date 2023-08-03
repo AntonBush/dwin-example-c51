@@ -2,57 +2,36 @@
 #define __DGUSVAR_H__
 
 #include "lib/int.h"
+#include "lib/bits.h"
 
-#define DGUSVAR__CAN_BASE_ADDRESS_H 0xFF
-#define DGUSVAR__CAN_BASE_ADDRESS_M 0x00
-#define DGUSVAR__CAN_BASE_ADDRESS_L 0x60
+#define DGUSVAR__CAN_ADDRESS 0xFF0060UL
+#define DGUSVAR__BUFFER_SIZE 512
 
-typedef union DgusVar_Address
-{
-  u8 raw[3];
-  struct DgusVar_Address_Bytes
-  {
-    u8 high;
-    u8 middle;
-    u8 low;
-  } bytes;
-} DgusVar_Address_t;
+#define DGUSVAR__WRITE_U8_TO_BUFFER(ptr, val) \
+*(ptr)++ = (val)
+#define DGUSVAR__WRITE_U16_TO_BUFFER(ptr, val) \
+*((u16 xdata *)(ptr))++ = (val)
+#define DGUSVAR__WRITE_U32_TO_BUFFER(ptr, val) \
+*((u32 xdata *)(ptr))++ = (val)
 
-typedef union DgusVar_Data
-{
-  u8 bytes[4];
-  u16 variables[2];
-} DgusVar_Data_t;
+#define DGUSVAR__READ_U8_FROM_BUFFER(ptr) \
+(*(ptr)++)
+#define DGUSVAR__READ_U16_FROM_BUFFER(ptr) \
+(*((u16 xdata *)(ptr))++)
+#define DGUSVAR__READ_U32_FROM_BUFFER(ptr) \
+(*((u32 xdata *)(ptr))++)
 
-typedef struct DgusVar_Message
-{
-  DgusVar_Address_t address;
-  u8 length;
-  DgusVar_Data_t content;
-} DgusVar_Message_t;
+#define DGUSVAR__FILLED_BUFFER_SIZE(ptr, buffer) \
+(( \
+  ((ptr) - (buffer)) + (((ptr) - (buffer)) & Bits_Bit8_0) \
+) >> 1)
 
-DgusVar_Address_t DgusVar_newAddress(u32 address);
-DgusVar_Address_t DgusVar_newVpAddress(u16 address);
+typedef u8 xdata * DgusVar_BufferPointer_t;
 
-DgusVar_Data_t DgusVar_newData(u32 content);
-DgusVar_Data_t DgusVar_newRawData(u8 *bytes, u8 length);
-DgusVar_Data_t DgusVar_newVariableData(u16 *variables, u8 count);
+extern u8 xdata DgusVar_RxBuffer[DGUSVAR__BUFFER_SIZE];
+extern u8 xdata DgusVar_TxBuffer[DGUSVAR__BUFFER_SIZE];
 
-DgusVar_Message_t DgusVar_newMessage(
-  DgusVar_Address_t address
-  , u8 length
-  , DgusVar_Data_t content
-);
-
-void DgusVar_beginReadWrite(void);
-void DgusVar_endReadWrite(void);
-
-void DgusVar_setAddressIncrement(u8 increment);
-
-DgusVar_Data_t DgusVar_read(DgusVar_Address_t address, u8 length);
-void DgusVar_write(DgusVar_Message_t message);
-
-DgusVar_Data_t DgusVar_continueRead(u8 length);
-void DgusVar_continueWrite(u8 length, DgusVar_Data_t content);
+void DgusVar_read(u32 variable_address, u16 n_variables) small;
+void DgusVar_write(u32 variable_address, u16 n_variables) small;
 
 #endif
