@@ -44,7 +44,7 @@ void Ui_init(Ui_MainPage_t *page)
 //
 #include "sys.h"
 
-static xdata u16 buffer[256];
+static u16 xdata buffer[256];
 static u8 buffer_size;
 
 static void buffer_push_back(u16 value)

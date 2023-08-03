@@ -71,7 +71,7 @@ typedef enum Can_Length
   , Can_Length_8
 };
 
-static xdata Can_Bus_t Can_Bus;
+static Can_Bus_t xdata Can_Bus;
 
 //125K{0x20,0x20,0xF6,0x00},150K{0x3F,0x40,0x72,0x00},
 //125K{0x3F,0x40,0x72,0x00},250K{0x1F,0x40,0x72,0x00},500K{0x0F,0x40,0x72,0x00},1M{0x07,0x40,0x72,0x00}
@@ -152,7 +152,7 @@ void Can_resetError(void) small
 
 void LoadOneFrame(void) small
 {
-  Can_Message_t *tx_message = Can_Bus.tx + Can_Bus.tx.tail;
+  Can_Message_t *tx_message = Can_Bus.tx.messages + Can_Bus.tx.tail;
   ADR_H = 0xFF;
   ADR_M = 0x00;
   ADR_L = 0x64;
@@ -187,7 +187,7 @@ void LoadOneFrame(void) small
   RAMMODE = 0;
 }
 
-void Can_tx(u8 status, u32 id, const u8 *bytes, u16 length) compact
+void Can_tx(u8 status, u32 id, const u8 *bytes, u16 length)
 {
   Can_Message_t *tx_message;
 
@@ -217,7 +217,7 @@ void Can_tx(u8 status, u32 id, const u8 *bytes, u16 length) compact
     u8 frame, byte;
     u8 n_frames = length >> 3;
     u8 frame_offset = length % 8;
-    for(frame = 0; frame < n_frames; ++frame)
+    for (frame = 0; frame < n_frames; ++frame)
     {
       tx_message->id = id;
       tx_message->status = status | Can_Length_8;
@@ -260,7 +260,7 @@ void Can_tx(u8 status, u32 id, const u8 *bytes, u16 length) compact
   }
 }
 
-u8 Can_rx(Can_Message_t *message) compact
+u8 Can_rx(Can_Message_t *message)
 {
   if (Can_Bus.rx.head == Can_Bus.rx.tail)
   {

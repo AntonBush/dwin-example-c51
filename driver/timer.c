@@ -23,11 +23,11 @@ typedef enum Timer_Mode
   , Timer_Mode_Gate = Bits_Bit8_3
 } Timer_Mode_t;
 
-data u8 Timer_Tick = 0;
+u8 data Timer_Tick = 0;
 
-data u8 Timer_EnableFlags;
-data u8 Timer_TimeoutFlags;
-data u16 Timer_Durations[8];
+u8 data Timer_EnableFlags;
+u8 data Timer_TimeoutFlags;
+u16 data Timer_Durations[8];
 
 void Timer_init(void)
 {
@@ -73,7 +73,7 @@ void Timer_handleInterruption(void) small interrupt 1
   ENABLE_INTERRUPT();
 }
 
-void Timer_start(u8 id, u16 time) compact
+void Timer_start(u8 id, u16 time)
 {
   u8 timer_id = 1 << id;
 
@@ -82,7 +82,7 @@ void Timer_start(u8 id, u16 time) compact
   Timer_TimeoutFlags &= ~timer_id;
 }
 
-u8 Timer_timeout(u8 id) compact
+u8 Timer_timeout(u8 id)
 {
   u8 timer_id = 1 << id;
   u8 flag;

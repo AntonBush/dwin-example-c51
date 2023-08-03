@@ -5,12 +5,10 @@
 
 #include "app/logic.h"
 
-sbit CAN_RLSEL = P0^4;
-
 void main()
 {
-  xdata Logic_Data_t logic;
-  xdata u8 lifeCounter = 0;
+  Logic_Data_t xdata logic;
+  u8 data life_counter = 0;
 
 	//Baud rate:125K{0x3F,0x40,0x72,0x00},250K{0x1F,0x40,0x72,0x00},500K{0x0F,0x40,0x72,0x00},1M{0x07,0x40,0x72,0x00}
   Can_InitConfig_t can_config = { 0x1f , 0x40 , 0x72 };
@@ -34,14 +32,14 @@ void main()
 		if(Timer_timeout(1))
 		{
 			u8 chabuf[2] = { 0, 0 };
-      chabuf[0] = (lifeCounter) & 0xFF;
+      chabuf[0] = life_counter;
 //			chabuf[1] = (logic.game.game.on) & 0x01;
 //			chabuf[1] |= ((logic.dashboardParams.pageIndex) & 0x0F) << 4;
 
 			Can_tx(0, 0x111, chabuf, 2);
       INTERRUPT_GUARD(Timer_start(1, 500));
 
-			lifeCounter++;
+			++life_counter;
 		}
 		if(Timer_timeout(0))
 		{
