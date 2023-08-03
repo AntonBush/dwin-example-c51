@@ -1,6 +1,5 @@
 #include "driver/sys.h"
 #include "driver/timer.h"
-#include "driver/interrupt.h"
 #include "driver/can.h"
 
 #include "app/logic.h"

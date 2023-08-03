@@ -9,6 +9,8 @@
 #define CAN__ENABLE() CAN_CR |= Can_Control_Enable
 #define CAN__DISABLE() CAN_CR &= ~Can_Control_Enable
 
+#define CAN__ENABLE_INTERRUPT() ECAN = 1
+
 #define CAN__RESET() \
 CAN_CR |= Can_Control_Reset; \
 INTERRUPT_GUARD(Timer_start(6, 1)) \
@@ -139,7 +141,7 @@ void Can_init(
   CAN__ENABLE();
   CAN__CONFIGURE();
 
-  ECAN = 1;
+  CAN__ENABLE_INTERRUPT();
 }
 
 void Can_resetError(void) small
