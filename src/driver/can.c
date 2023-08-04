@@ -14,7 +14,7 @@
 
 #define CAN__RESET() \
 CAN_CR |= Can_Control_Reset; \
-INTERRUPT_GUARD(Timer_start(6, 1)) \
+SYS__INTERRUPT_GUARD(Timer_start(6, 1)) \
 while(!Timer_timeout(6)); \
 CAN_CR &= ~Can_Control_Reset
 
@@ -236,9 +236,9 @@ void Can_tx(u8 status, u32 id, const u8 *bytes, u16 length)
   {
     CAN__WAIT_SENDING();
 
-    INTERRUPT_GUARD(LoadOneFrame());
+    SYS__INTERRUPT_GUARD(LoadOneFrame());
     Can_Bus.tx_flag = Bits_State_Set;
-    INTERRUPT_GUARD(Timer_start(7, 3000));
+    SYS__INTERRUPT_GUARD(Timer_start(7, 3000));
 
     CAN__SEND();
   }
@@ -266,7 +266,7 @@ void Can_handleInterruption(void) small interrupt 9
 {
   u16 ignore;
 
-  DISABLE_INTERRUPT();
+  SYS__DISABLE_INTERRUPT();
   if(CAN_IR & Bits_Bit8_7)
   {
     CAN_IR &= ~(Bits_Bit8_7 | Bits_Bit8_6);
@@ -337,7 +337,7 @@ void Can_handleInterruption(void) small interrupt 9
     CAN__SEND();
   }
   CAN_ET = 0;
-  ENABLE_INTERRUPT();
+  SYS__ENABLE_INTERRUPT();
 }
 
 

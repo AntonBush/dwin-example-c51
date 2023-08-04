@@ -104,27 +104,27 @@ PPAGE_SFR       DATA    0A0H
 ;------------------------------------------------------------------------------
 
 ; Standard SFR Symbols
-ACC     	DATA    0E0H
-B       	DATA    0F0H
-SP      	DATA    81H
-DPL     	DATA    82H
-DPH     	DATA    83H
-CKCON		DATA	8EH
-DPC			DATA	93H
-DAGESEL   	DATA  	94H
-D_PAGESEL  	DATA  	95H
-T2CON		DATA	0C8H
-MUX_SEL		DATA	0C9H
-RAMMODE		DATA	0F8H
-PORTDRV     DATA    0F9H
-IEN0        DATA    0A8H
-IEN1        DATA    0B8H
-IEN2        DATA    09AH
-IP0         DATA    0A9H
-IP1         DATA    0B9H
-PSW         DATA    0D0H
+ACC     DATA    0E0H
+B       DATA    0F0H
+SP      DATA    81H
+DPL     DATA    82H
+DPH     DATA    83H
+CKCON           DATA    8EH
+DPC             DATA    93H
+PAGESEL         DATA    94H
+D_PAGESEL       DATA    95H
+T2CON           DATA    0C8H
+MUX_SEL         DATA    0C9H
+RAMMODE         DATA    0F8H
+PORTDRV         DATA    0F9H
+IEN0            DATA    0A8H
+IEN1            DATA    0B8H
+IEN2            DATA    09AH
+IP0             DATA    0A9H
+IP1             DATA    0B9H
+PSW             DATA    0D0H
 
-            NAME    ?C_STARTUP
+                NAME    ?C_STARTUP
 
 
 ?C_C51STARTUP   SEGMENT   CODE
@@ -139,42 +139,28 @@ PSW         DATA    0D0H
                 CSEG    AT      0
 ?C_STARTUP:     LJMP    STARTUP1
 
-			CSEG    AT  0F8H
-			DB  0FFH,0FFH		;����д 00H 00H
-			DB  'DWINT5'
+                CSEG    AT      0F8H
+                DB      0FFH,0FFH
+                DB      'DWINT5'
 
-            RSEG    ?C_C51STARTUP
+                RSEG    ?C_C51STARTUP
 
 STARTUP1:
-		;T5L ��ʼ������Ĵ���
-		;MOV  	DAGESEL,#01H
-		;MOV  	D_PAGESEL,#02H
-		;MOV	CKCON,#00H
-		;MOV	DPC,#00H
-		;MOV	T2CON,#70H
-		;MOV	MUX_SEL,#60H	;WDT OFF
-		;MOV	RAMMODE,#00H	;�ͷ�APP RAM
-
-
-;һ, �� startup.a51������
-		  MOV   DAGESEL,  #01H                     ;64K����ռ�
-		  MOV   D_PAGESEL,#02H                     ;32K xdata �ռ� 0x8000 -0xffff
-		  MOV   CKCON,    #00H                     ;cpu������1Tģʽ
-		  MOV	DPC,	  #00H                     ;��׼ģʽ,��Ҫָ�����xdata �� dptr ������
-		  MOV 	T2CON,	  #70H                     ;T2 �Զ���װ
-		  ;MOV 	MUX_SEL,  #00H                     ;WDT OFF,
-		  MOV 	MUX_SEL,  #60H                     ;WDT OFF,Uart2����P04,P05  Uart3����P06,P07
-		  MOV 	RAMMODE,  #00H
-		  MOV 	PORTDRV,  #01H
-	      MOV 	IEN0,     #00H
-		  MOV 	IEN1,     #00H
-		  MOV 	IEN2,     #00H
-		  MOV 	IP0,      #00H
-		  MOV 	IP1,      #00H
-		  ANL   PSW,      #0E7H
-		;������ startup.a51�е�һ��MOVX ָ��֮ǰ������λ��.
-
-
+; T5L
+                MOV     PAGESEL,        #01H
+                MOV     D_PAGESEL,      #02H
+                MOV     CKCON,          #00H
+                MOV     DPC,            #00H
+                MOV     T2CON,          #70H
+                MOV     MUX_SEL,        #60H
+                MOV     RAMMODE,        #00H
+                MOV     PORTDRV,        #01H
+                MOV     IEN0,           #00H
+                MOV     IEN1,           #00H
+                MOV     IEN2,           #00H
+                MOV     IP0,            #00H
+                MOV     IP1,            #00H
+                ANL     PSW,            #0E7H
 
 IF IDATALEN <> 0
                 MOV     R0,#IDATALEN - 1

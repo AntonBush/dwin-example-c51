@@ -11,10 +11,10 @@
 #define CAN_TX_TIMER_DURATION 500
 
 #define START_LOGIC_TIMER() \
-INTERRUPT_GUARD(Timer_start(LOGIC_TIMER_ID, LOGIC_TIMER_DURATION))
+SYS__INTERRUPT_GUARD(Timer_start(LOGIC_TIMER_ID, LOGIC_TIMER_DURATION))
 
 #define START_CAN_TX_TIMER() \
-INTERRUPT_GUARD(Timer_start(CAN_TX_TIMER_ID, CAN_TX_TIMER_DURATION))
+SYS__INTERRUPT_GUARD(Timer_start(CAN_TX_TIMER_ID, CAN_TX_TIMER_DURATION))
 
 Logic_Data_t xdata logic;
 
@@ -55,17 +55,17 @@ void init(void)
   Can_InitConfig_t can_config = { 0x1F, 0x40, 0x72 };
   Can_Filter_t can_filter;
 
-  DISABLE_INTERRUPT();
+  SYS__DISABLE_INTERRUPT();
 
   can_filter.acceptance_code.value = 0;
   can_filter.acceptance_mask.value = ~(u32)0;
 
-  //sys_init(); // инициализация основных регистров
+  Sys_init(); // инициализация основных регистров
   Timer_init();
   Can_init(&can_config, &can_filter);
   Logic_init(&logic);
 
-  ENABLE_INTERRUPT();
+  SYS__ENABLE_INTERRUPT();
 }
 
 void logicControl(void)

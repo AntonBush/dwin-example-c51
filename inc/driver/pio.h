@@ -1,8 +1,13 @@
 #ifndef __PIO_H__
 #define __PIO_H__
 
+#include "driver/sys.h"
+
 #include "lib/int.h"
 #include "lib/bits.h"
+
+#define PIO__SET_PERIPHERALS(peripherals) \
+MUX_SEL = peripherals
 
 typedef enum Pio_Port
 {
@@ -48,7 +53,6 @@ typedef enum Pio_Peripheral
 
 void Pio_setPortMode(Pio_Port_t port, u8 mode);
 void Pio_setPinModes(Pio_Port_t port, u8 pins, Pio_PinMode_t mode);
-void Pio_setPeripherals(u8 peripherals);
 void Pio_setPeripheralModes(u8 peripherals, Bits_State_t mode);
 
 u8 Pio_readPort(Pio_Port_t port);

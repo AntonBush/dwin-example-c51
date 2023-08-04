@@ -52,7 +52,7 @@ void Timer_handleInterruption(void) small interrupt 1
 {
   u8 i;
 
-  DISABLE_INTERRUPT();
+  SYS__DISABLE_INTERRUPT();
 
   Timer_Tick += 1;
 
@@ -70,7 +70,7 @@ void Timer_handleInterruption(void) small interrupt 1
     Timer_EnableFlags &= ~timer_id;
   }
 
-  ENABLE_INTERRUPT();
+  SYS__ENABLE_INTERRUPT();
 }
 
 void Timer_start(u8 id, u16 time)

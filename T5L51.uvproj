@@ -363,20 +363,15 @@
           <GroupName>device</GroupName>
           <Files>
             <File>
-              <FileName>STARTUP_M5.A51</FileName>
+              <FileName>STARTUP.A51</FileName>
               <FileType>2</FileType>
-              <FilePath>.\src\device\STARTUP_M5.A51</FilePath>
+              <FilePath>.\src\device\STARTUP.A51</FilePath>
             </File>
           </Files>
         </Group>
         <Group>
           <GroupName>driver</GroupName>
           <Files>
-            <File>
-              <FileName>sys.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\driver\sys.c</FilePath>
-            </File>
             <File>
               <FileName>can.c</FileName>
               <FileType>1</FileType>
@@ -396,6 +391,11 @@
               <FileName>dgusvar.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\driver\dgusvar.c</FilePath>
+            </File>
+            <File>
+              <FileName>sys.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\driver\sys.c</FilePath>
             </File>
           </Files>
         </Group>

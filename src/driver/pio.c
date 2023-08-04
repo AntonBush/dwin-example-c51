@@ -40,11 +40,6 @@ void Pio_setPinModes(Pio_Port_t port, u8 pins, Pio_PinMode_t mode)
   Pio_setPortMode(port, new_mode);
 }
 
-void Pio_setPeripherals(u8 peripherals)
-{
-  MUX_SEL = peripherals;
-}
-
 void Pio_setPeripheralModes(u8 peripherals, Bits_State_t mode)
 {
   u8 old_mode = MUX_SEL;

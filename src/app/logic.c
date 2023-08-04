@@ -38,7 +38,7 @@ void Logic_update(Logic_Data_t *logic)
   }
 
   Logic_updateMainPage(logic);
-  INTERRUPT_GUARD(Ui_update(&(logic->ui)));
+  SYS__INTERRUPT_GUARD(Ui_update(&(logic->ui)));
 }
 
 void Logic_updateMainPage(Logic_Data_t *logic)
