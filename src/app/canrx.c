@@ -1,6 +1,6 @@
 #include "app/canrx.h"
 
-#include "lib/bytevector.h"
+#include "ByteVector_HelpFunctions.h"
 
 static void CanRx_recieveVcuMsg(CanRx_VcuMsg_t *rx_data, Can_Message_t *message);
 static void CanRx_recieveGasTankData(CanRx_GasTankData_t *rx_data, Can_Message_t *message);
@@ -70,6 +70,15 @@ void CanRx_recieve(CanRx_Data_t *rx_data, Can_Message_t *message)
   {
     CanRx_recievePcuMsg3(&(rx_data->pcu3), message);
   }
+}
+
+static u32 ByteVector_regularParameter(uint8_t *vectorData, uint32_t bitSize, uint32_t index)
+{
+  return ByteVector_GetRegularParam(vectorData, bitSize, index) << (32 - bitSize) >> (32 - bitSize);
+}
+static u32 ByteVector_parameter(uint8_t *vectorData, uint32_t bitSize, uint32_t bitPosition)
+{
+  return ByteVector_GetParam(vectorData, bitSize, bitPosition, BYTEVECTOR_INTEL) << (32 - bitSize) >> (32 - bitSize);
 }
 
 void CanRx_recieveVcuMsg(CanRx_VcuMsg_t *rx_data, Can_Message_t *message)

@@ -122,7 +122,7 @@
             <Oh166RecLen>16</Oh166RecLen>
           </OPTHX>
           <Simulator>
-            <UseSimulator>1</UseSimulator>
+            <UseSimulator>0</UseSimulator>
             <LoadApplicationAtStartup>1</LoadApplicationAtStartup>
             <RunToMain>1</RunToMain>
             <RestoreBreakpoints>1</RestoreBreakpoints>
@@ -134,7 +134,7 @@
             <RestoreSysVw>1</RestoreSysVw>
           </Simulator>
           <Target>
-            <UseTarget>0</UseTarget>
+            <UseTarget>1</UseTarget>
             <LoadApplicationAtStartup>1</LoadApplicationAtStartup>
             <RunToMain>0</RunToMain>
             <RestoreBreakpoints>1</RestoreBreakpoints>
@@ -428,14 +428,19 @@
           <GroupName>lib</GroupName>
           <Files>
             <File>
-              <FileName>bytevector.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\lib\bytevector.c</FilePath>
-            </File>
-            <File>
               <FileName>round.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\lib\round.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>ByteVector</GroupName>
+          <Files>
+            <File>
+              <FileName>ByteVector_HelpFunctions.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ByteVector_HelpFunctions.c</FilePath>
             </File>
           </Files>
         </Group>
