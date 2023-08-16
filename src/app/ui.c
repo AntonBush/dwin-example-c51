@@ -7,6 +7,9 @@
 DGUSVAR__WRITE_U16_TO_BUFFER(ptr, val); \
 DGUSVAR__WRITE_U16_TO_BUFFER(ptr, 0)
 
+#define UI__RESERVE_VARIABLE(ptr) \
+UI__BUFFER_PUSH_BACK(ptr, 0)
+
 void Ui_init(Ui_MainPage_t *page)
 {
   page->tank.valve_open = Ui_IconState_Passive;
@@ -59,7 +62,7 @@ void Ui_update(Ui_MainPage_t *page)
 //  message.content.variables[0] = page->tank.valve_open;
 //  DgusVar_write(message);
   UI__BUFFER_PUSH_BACK(tx_buffer, page->tank.valve_open);
-  UI__BUFFER_PUSH_BACK(tx_buffer, 0);
+  UI__RESERVE_VARIABLE(tx_buffer);
 
 //  message.address = DgusVar_newVpAddress(VPMAP__TANK_BALLOON);
 //  message.content.variables[0] = page->tank.balloon;
@@ -129,14 +132,14 @@ void Ui_update(Ui_MainPage_t *page)
 //  message.content.variables[0] = page->battery.voltage_bounds.max;
 //  DgusVar_continueWrite(message.length, message.content);
   UI__BUFFER_PUSH_BACK(tx_buffer, page->battery.voltage_bounds.max);
-  UI__BUFFER_PUSH_BACK(tx_buffer, 0);
-  UI__BUFFER_PUSH_BACK(tx_buffer, 0);
+  UI__RESERVE_VARIABLE(tx_buffer);
+  UI__RESERVE_VARIABLE(tx_buffer);
 
 //  message.address = DgusVar_newVpAddress(VPMAP__FC_STATE);
 //  message.content.variables[0] = page->fuel_cell.state;
 //  DgusVar_write(message);
   UI__BUFFER_PUSH_BACK(tx_buffer, page->fuel_cell.state);
-  UI__BUFFER_PUSH_BACK(tx_buffer, 0);
+  UI__RESERVE_VARIABLE(tx_buffer);
 
 //  message.address = DgusVar_newVpAddress(VPMAP__FC_OUTPUT_POWER);
 //  message.content.variables[0] = page->fuel_cell.output_power;
@@ -146,7 +149,7 @@ void Ui_update(Ui_MainPage_t *page)
 //  message.content.variables[0] = page->fuel_cell.temp;
 //  DgusVar_continueWrite(message.length, message.content);
   UI__BUFFER_PUSH_BACK(tx_buffer, page->fuel_cell.temp);
-  UI__BUFFER_PUSH_BACK(tx_buffer, 0);
+  UI__RESERVE_VARIABLE(tx_buffer);
 
 //  message.address = DgusVar_newVpAddress(VPMAP__HED_HYDROGEN_RATE);
 //  message.content.variables[0] = page->hed_rate.hydrogen;
