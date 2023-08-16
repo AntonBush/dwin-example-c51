@@ -1,6 +1,6 @@
 #include "app/canrx.h"
 
-#include "ByteVector_HelpFunctions.h"
+#include "ByteVector/ByteVector_HelpFunctions.h"
 
 static void CanRx_recieveVcuMsg(CanRx_VcuMsg_t *rx_data, Can_Message_t *message);
 static void CanRx_recieveGasTankData(CanRx_GasTankData_t *rx_data, Can_Message_t *message);

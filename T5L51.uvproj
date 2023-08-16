@@ -397,6 +397,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\driver\sys.c</FilePath>
             </File>
+            <File>
+              <FileName>dgusvar_io.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\driver\dgusvar_io.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -440,7 +445,7 @@
             <File>
               <FileName>ByteVector_HelpFunctions.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\ByteVector_HelpFunctions.c</FilePath>
+              <FilePath>.\ByteVector\ByteVector_HelpFunctions.c</FilePath>
             </File>
           </Files>
         </Group>
