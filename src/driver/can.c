@@ -7,73 +7,73 @@
 
 #define CAN__RESET_CONTROL() CAN_CR = 0
 
-#define CAN__ENABLE() CAN_CR |= Can_Control_Enable
-#define CAN__DISABLE() CAN_CR &= ~Can_Control_Enable
+#define CAN__ENABLE() CAN_CR |= CAN__CONTROL_ENABLE
+#define CAN__DISABLE() CAN_CR &= ~CAN__CONTROL_ENABLE
 
 #define CAN__ENABLE_INTERRUPT() ECAN = 1
 
 #define CAN__RESET() \
-CAN_CR |= Can_Control_Reset; \
+CAN_CR |= CAN__CONTROL_RESET; \
 SYS__INTERRUPT_GUARD(Timer_start(6, 1)) \
 while(!Timer_timeout(6)); \
-CAN_CR &= ~Can_Control_Reset
+CAN_CR &= ~CAN__CONTROL_RESET
 
 #define CAN__CONFIGURE() \
-CAN_CR |= Can_Control_Configure; \
-do {} while(CAN_CR & Can_Control_Configure)
+CAN_CR |= CAN__CONTROL_CONFIGURE; \
+do {} while(CAN_CR & CAN__CONTROL_CONFIGURE)
 
-#define CAN__SPEED_1_SAMPLING() CAN_CR |= Can_Control_SpeedMode
-#define CAN__SPEED_3_SAMPLING() CAN_CR &= ~Can_Control_SpeedMode
-#define CAN__SEND() CAN_CR |= Can_Control_Send
-#define CAN__WAIT_SENDING() do {} while(CAN_CR & Can_Control_Send)
+#define CAN__SPEED_1_SAMPLING() CAN_CR |= CAN__CONTROL_SPEED_MODE
+#define CAN__SPEED_3_SAMPLING() CAN_CR &= ~CAN__CONTROL_SPEED_MODE
+#define CAN__SEND() CAN_CR |= CAN__CONTROL_SEND
+#define CAN__WAIT_SENDING() do {} while(CAN_CR & CAN__CONTROL_SEND)
 
 #define CAN__LOOP_INDEX(index) (((index) + 1) % CAN__BUFFER_SIZE)
 
 typedef enum Can_Control
 {
-  Can_Control_Send = Bits_Bit8_2
+  CAN__CONTROL_SEND = BITS__BIT8_2
   // 1 = double; 0 = single
-  , Can_Control_FilterMode = Bits_Bit8_3
+  , CAN__CONTROL_FILTER_MODE = BITS__BIT8_3
 
   // 1 = 1 sampling; 0 = 3 sampling
-  , Can_Control_SpeedMode = Bits_Bit8_4
-  , Can_Control_Configure = Bits_Bit8_5
-  , Can_Control_Reset = Bits_Bit8_6
-  , Can_Control_Enable = Bits_Bit8_7
+  , CAN__CONTROL_SPEED_MODE = BITS__BIT8_4
+  , CAN__CONTROL_CONFIGURE = BITS__BIT8_5
+  , CAN__CONTROL_RESET = BITS__BIT8_6
+  , CAN__CONTROL_ENABLE = BITS__BIT8_7
 } Can_Control_t;
 
 typedef enum Can_Error
 {
-  Can_Error_Bit = Bits_Bit8_0
-  , Can_Error_Bit_Filling = Bits_Bit8_1
-  , Can_Error_Format = Bits_Bit8_2
-  , Can_Error_Response = Bits_Bit8_3
+  CAN__ERROR_BIT = BITS__BIT8_0
+  , CAN__ERROR_BIT_FILLING = BITS__BIT8_1
+  , CAN__ERROR_FORMAT = BITS__BIT8_2
+  , CAN__ERROR_RESPONSE = BITS__BIT8_3
 
-  , Can_Error_CrcCheck = Bits_Bit8_4
-  , Can_Error_Passive = Bits_Bit8_5
-  , Can_Error_Active = Bits_Bit8_6
-  , Can_Error_NodeSuspension = Bits_Bit8_7
+  , CAN__ERROR_CRC_CHECK = BITS__BIT8_4
+  , CAN__ERROR_PASSIVE = BITS__BIT8_5
+  , CAN__ERROR_ACTIVE = BITS__BIT8_6
+  , CAN__ERROR_NODE_SUSPENSION = BITS__BIT8_7
 } Can_Error_t;
 
 typedef enum Can_Status
 {
-  Can_Status_Rtr = Bits_Bit8_6
-  , Can_Status_Ide = Bits_Bit8_7
+  CAN__STATUS_RTR = BITS__BIT8_6
+  , CAN__STATUS_IDE = BITS__BIT8_7
 } Can_Status_t;
 
 typedef enum Can_Length
 {
-  Can_Length_0
-  , Can_Length_1
-  , Can_Length_2
-  , Can_Length_3
+  CAN__LENGTH_0
+  , CAN__LENGTH_1
+  , CAN__LENGTH_2
+  , CAN__LENGTH_3
 
-  , Can_Length_4
-  , Can_Length_5
-  , Can_Length_6
-  , Can_Length_7
-  , Can_Length_8
-};
+  , CAN__LENGTH_4
+  , CAN__LENGTH_5
+  , CAN__LENGTH_6
+  , CAN__LENGTH_7
+  , CAN__LENGTH_8
+} Can_Length_t;
 
 static Can_Bus_t xdata Can_Bus;
 
@@ -90,14 +90,14 @@ void Can_init(
   Can_Bus.rx.tail = 0;
   Can_Bus.tx.head = 0;
   Can_Bus.tx.tail = 0;
-  Can_Bus.tx_flag = Bits_State_NotSet;
+  Can_Bus.tx_flag = BITS__STATE_NOT_SET;
 
   CAN__RESET_CONTROL();
 
-  Pio_setPinModes(Pio_Port_CanTx, Pio_Pin_CanTx, Pio_PinMode_Out);
-  Pio_setPinModes(Pio_Port_CanRx, Pio_Pin_CanRx, Pio_PinMode_In);
-  Pio_writePins(Pio_Port_CanTx, Pio_Pin_CanTx, Bits_State_Set);
-  Pio_setPeripheralModes(Pio_Peripheral_Can, Bits_State_Set);
+  Pio_setPinModes(PIO__PORT_CAN_TX, PIO__PIN_CAN_TX, PIO__PIN_MODE_OUT);
+  Pio_setPinModes(PIO__PORT_CAN_RX, PIO__PIN_CAN_RX, PIO__PIN_MODE_IN);
+  Pio_writePins(PIO__PORT_CAN_TX, PIO__PIN_CAN_TX, BITS__STATE_SET);
+  Pio_setPeripheralModes(PIO__PERIPHERAL_CAN, BITS__STATE_SET);
 
   DGUSVAR__WRITE_U8_TO_BUFFER(
     tx_buffer
@@ -140,11 +140,11 @@ void Can_init(
 
 void Can_resetError(void) small
 {
-  if (!(CAN_ET & Can_Error_Passive)) return;
+  if (!(CAN_ET & CAN__ERROR_PASSIVE)) return;
 
-  CAN_ET &= ~Can_Error_Passive;
+  CAN_ET &= ~CAN__ERROR_PASSIVE;
   CAN__RESET();
-  Can_Bus.tx_flag = Bits_State_NotSet;
+  Can_Bus.tx_flag = BITS__STATE_NOT_SET;
 }
 
 void LoadOneFrame(void) small
@@ -183,9 +183,9 @@ void Can_tx(u8 status, u32 id, const u8 *bytes, u16 length)
   if (2048 < length)
     return;
 
-  status &= (Can_Status_Ide | Can_Status_Rtr);
+  status &= (CAN__STATUS_IDE | CAN__STATUS_RTR);
 
-  if(status & Can_Status_Ide)
+  if(status & CAN__STATUS_IDE)
   {
     id <<= 3;
   }
@@ -195,7 +195,7 @@ void Can_tx(u8 status, u32 id, const u8 *bytes, u16 length)
   }
 
   tx_message = Can_Bus.tx.messages + Can_Bus.tx.head;
-  if(status & Can_Status_Rtr)
+  if(status & CAN__STATUS_RTR)
   {
     tx_message->id = id;
     tx_message->status = status;
@@ -209,7 +209,7 @@ void Can_tx(u8 status, u32 id, const u8 *bytes, u16 length)
     for (frame = 0; frame < n_frames; ++frame)
     {
       tx_message->id = id;
-      tx_message->status = status | Can_Length_8;
+      tx_message->status = status | CAN__LENGTH_8;
       for(byte = 0; byte < 8; ++byte)
       {
         tx_message->bytes[byte] = *bytes++;
@@ -237,7 +237,7 @@ void Can_tx(u8 status, u32 id, const u8 *bytes, u16 length)
     CAN__WAIT_SENDING();
 
     SYS__INTERRUPT_GUARD(LoadOneFrame());
-    Can_Bus.tx_flag = Bits_State_Set;
+    Can_Bus.tx_flag = BITS__STATE_SET;
     SYS__INTERRUPT_GUARD(Timer_start(7, 3000));
 
     CAN__SEND();
@@ -245,7 +245,7 @@ void Can_tx(u8 status, u32 id, const u8 *bytes, u16 length)
 
   if(Can_Bus.tx_flag && Timer_timeout(7))
   {
-    Can_Bus.tx_flag = Bits_State_NotSet;
+    Can_Bus.tx_flag = BITS__STATE_NOT_SET;
   }
 }
 
@@ -267,16 +267,16 @@ void Can_handleInterruption(void) small interrupt 9
   u16 ignore;
 
   SYS__DISABLE_INTERRUPT();
-  if(CAN_IR & Bits_Bit8_7)
+  if(CAN_IR & BITS__BIT8_7)
   {
-    CAN_IR &= ~(Bits_Bit8_7 | Bits_Bit8_6);
+    CAN_IR &= ~(BITS__BIT8_7 | BITS__BIT8_6);
   }
-  if(CAN_IR & Bits_Bit8_6)
+  if(CAN_IR & BITS__BIT8_6)
   {
     DgusVar_BufferPointer_t rx_buffer = DgusVar_RxBuffer;
     Can_Message_t *rx_message = Can_Bus.rx.messages + Can_Bus.rx.head;
 
-    CAN_IR &= ~(Bits_Bit8_6);
+    CAN_IR &= ~(BITS__BIT8_6);
 
     DgusVar_read((DGUSVAR__CAN_ADDRESS + 8) << 1, 8);
 
@@ -287,12 +287,12 @@ void Can_handleInterruption(void) small interrupt 9
     rx_message->id = DGUSVAR__READ_U32_FROM_BUFFER(rx_buffer);
     rx_message->id >>= 3;
 
-    if(!(rx_message->status & Bits_Bit8_7))
+    if(!(rx_message->status & BITS__BIT8_7))
     {
       rx_message->id >>= 18;
     }
 
-    if(!(rx_message->status & Bits_Bit8_6))
+    if(!(rx_message->status & BITS__BIT8_6))
     {
       rx_message->bytes[0] = DGUSVAR__READ_U8_FROM_BUFFER(rx_buffer);
       rx_message->bytes[1] = DGUSVAR__READ_U8_FROM_BUFFER(rx_buffer);
@@ -306,9 +306,9 @@ void Can_handleInterruption(void) small interrupt 9
 
     Can_Bus.rx.head = CAN__LOOP_INDEX(Can_Bus.rx.head);
   }
-  if(CAN_IR & Bits_Bit8_5)
+  if(CAN_IR & BITS__BIT8_5)
   {
-    CAN_IR &= ~Bits_Bit8_5;
+    CAN_IR &= ~BITS__BIT8_5;
     if(Can_Bus.tx.tail != Can_Bus.tx.head)
     {
       CAN__WAIT_SENDING();
@@ -320,20 +320,20 @@ void Can_handleInterruption(void) small interrupt 9
     }
     else
     {
-      Can_Bus.tx_flag = Bits_State_NotSet;
+      Can_Bus.tx_flag = BITS__STATE_NOT_SET;
     }
   }
-  if(CAN_IR & Bits_Bit8_4)
+  if(CAN_IR & BITS__BIT8_4)
   {
-    CAN_IR &= ~Bits_Bit8_4;
+    CAN_IR &= ~BITS__BIT8_4;
   }
-  if(CAN_IR & Bits_Bit8_3)
+  if(CAN_IR & BITS__BIT8_3)
   {
-    CAN_IR &= ~Bits_Bit8_3;
+    CAN_IR &= ~BITS__BIT8_3;
   }
-  if(CAN_IR & Bits_Bit8_2)
+  if(CAN_IR & BITS__BIT8_2)
   {
-    CAN_IR &= ~Bits_Bit8_2;
+    CAN_IR &= ~BITS__BIT8_2;
     CAN__SEND();
   }
   CAN_ET = 0;

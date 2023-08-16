@@ -3,10 +3,10 @@
 
 typedef enum J1939_State
 {
-  J1939_State_Passive
-  , J1939_State_Active
-  , J1939_State_Error
-  , J1939_State_NotAvailable
+  J1939__STATE_PASSIVE
+  , J1939__STATE_ACTIVE
+  , J1939__STATE_ERROR
+  , J1939__STATE_NOTAVAIL
 } J1939_State_t;
 
 #endif

@@ -23,7 +23,7 @@
 
 #define DGUSVAR__FILLED_BUFFER_SIZE(ptr, buffer) \
 (( \
-  ((ptr) - (buffer)) + (((ptr) - (buffer)) & Bits_Bit8_0) \
+  ((ptr) - (buffer)) + (((ptr) - (buffer)) & BITS__BIT8_0) \
 ) >> 1)
 
 typedef u8 xdata * DgusVar_BufferPointer_t;

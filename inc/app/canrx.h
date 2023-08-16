@@ -13,22 +13,22 @@
 
 typedef enum CanRx_SystemStatus
 {
-  CanRx_SystemStatus_Off = 0
-  , CanRx_SystemStatus_Precharge = 1
-  //, CanRx_SystemStatus_Off = 2
-  , CanRx_SystemStatus_Shutdown = 3
-  , CanRx_SystemStatus_PowerLimit = 4
+  CANRX__SYSTEM_STATUS_OFF = 0
+  , CANRX__SYSTEM_STATUS_PRECHARGE = 1
+  //, CANRX__SYSTEM_STATUS_OFF = 2
+  , CANRX__SYSTEM_STATUS_SHUTDOWN = 3
+  , CANRX__SYSTEM_STATUS_POWER_LIMIT = 4
   
-  , CanRx_SystemStatus_Error = 14
-  , CanRx_SystemStatus_NotAvailable = 15
+  , CANRX__SYSTEM_STATUS_ERROR = 14
+  , CANRX__SYSTEM_STATUS_NOTAVAIL = 15
 } CanRx_SystemStatus_t;
 
 typedef enum CanRx_TmsState
 {
-  CanRx_TmsState_Off
-  , CanRx_TmsState_Cooling
-  , CanRx_TmsState_Heating
-  , CanRx_TmsState_Circulation
+  CANRX__TMS_STATE_OFF
+  , CANRX__TMS_STATE_COOLING
+  , CANRX__TMS_STATE_HEATING
+  , CANRX__TMS_STATE_CIRCULATION
 } CanRx_TmsState_t;
 
 typedef struct CanRx_VcuMsg

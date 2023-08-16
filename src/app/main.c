@@ -87,7 +87,7 @@ void canTxControl(void)
   static u8 data life_counter = 0;
   static u8 data buffer[2];
   buffer[0] = life_counter++;
-  //buffer[1] = logic.game.game.on & Bits_Bit8_0;
+  //buffer[1] = logic.game.game.on & BITS__BIT8_0;
   //buffer[1] |= (logic.dashboardParams.pageIndex & 0x0F) << 4;
 
   Can_tx(0, 0x111, buffer, 2);

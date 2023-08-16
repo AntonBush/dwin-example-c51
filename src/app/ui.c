@@ -12,9 +12,9 @@ UI__BUFFER_PUSH_BACK(ptr, 0)
 
 void Ui_init(Ui_MainPage_t *page)
 {
-  page->tank.valve_open = Ui_IconState_Passive;
+  page->tank.valve_open = UI__ICON_STATE_PASSIVE;
 
-  page->tank.balloon = Ui_IconState_Active;
+  page->tank.balloon = UI__ICON_STATE_ACTIVE;
   page->tank.filling = 0;
 
   page->tank.temp_bounds.min = 0;
@@ -29,8 +29,8 @@ void Ui_init(Ui_MainPage_t *page)
   page->battery.discharge_power = 0;
   page->battery.charge_power = 0;
 
-  page->battery.tms_state = Ui_TmsState_Off;
-  page->battery.battery = Ui_IconState_Active;
+  page->battery.tms_state = UI__TMS_STATE_OFF;
+  page->battery.battery = UI__ICON_STATE_ACTIVE;
   page->battery.soc = 0;
 
   page->battery.temp_bounds.min = 0;
@@ -39,7 +39,7 @@ void Ui_init(Ui_MainPage_t *page)
   page->battery.voltage_bounds.max = 0;
 
 
-  page->fuel_cell.state = Ui_IconState_Passive;
+  page->fuel_cell.state = UI__ICON_STATE_PASSIVE;
 
   page->fuel_cell.output_power = 0;
   page->fuel_cell.temp = 0;

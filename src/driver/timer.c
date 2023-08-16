@@ -15,12 +15,12 @@
 
 typedef enum Timer_Mode
 {
-  Timer_Mode_13bit
-  , Timer_Mode_16Bit
-  , Timer_Mode_8BitAutoReload
-  , Timer_Mode_Double8BitTimer
-  , Timer_Mode_Counter = Bits_Bit8_2
-  , Timer_Mode_Gate = Bits_Bit8_3
+  TIMER__MODE_13BIT
+  , TIMER__MODE_16BIT
+  , TIMER__MODE_8BIT_AUTO_RELOAD
+  , TIMER__MODE_DOUBLE_8BIT_TIMER
+  , TIMER__MODE_COUNTER = BITS__BIT8_2
+  , TIMER__MODE_GATE = BITS__BIT8_3
 } Timer_Mode_t;
 
 u8 data Timer_Tick = 0;
@@ -37,8 +37,8 @@ void Timer_init(void)
   Timer_TimeoutFlags = 0;
 
   TMOD = (
-    TIMER__MODE_TIMER_0(Timer_Mode_16Bit)
-    | TIMER__MODE_TIMER_1(Timer_Mode_16Bit)
+    TIMER__MODE_TIMER_0(TIMER__MODE_16BIT)
+    | TIMER__MODE_TIMER_1(TIMER__MODE_16BIT)
   );
 
   TIMER__SET_TIMER_0(T1MS);

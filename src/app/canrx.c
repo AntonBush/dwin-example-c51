@@ -10,8 +10,8 @@ static void CanRx_recievePcuMsg3(CanRx_PcuMsg3_t *rx_data, Can_Message_t *messag
 
 void CanRx_init(CanRx_Data_t *rx_data)
 {
-  rx_data->vcu.ignition = J1939_State_Passive;
-  rx_data->vcu.emergency_stop_req = J1939_State_Passive;
+  rx_data->vcu.ignition = J1939__STATE_PASSIVE;
+  rx_data->vcu.emergency_stop_req = J1939__STATE_PASSIVE;
   rx_data->vcu.power_req = 0;
   rx_data->vcu.traction_current = 0;
 
@@ -20,7 +20,7 @@ void CanRx_init(CanRx_Data_t *rx_data)
   rx_data->tank.prs_bounds.min = 0;
   rx_data->tank.prs_bounds.max = 0;
   rx_data->tank.filling = 0;
-  rx_data->tank.valve_state = J1939_State_Passive;
+  rx_data->tank.valve_state = J1939__STATE_PASSIVE;
   rx_data->tank.life_counter = 0;
 
   rx_data->pcu1.hv.voltage = 0;
@@ -28,19 +28,19 @@ void CanRx_init(CanRx_Data_t *rx_data)
   rx_data->pcu1.hv.max_charge_current = 0;
   rx_data->pcu1.hv.max_discharge_current = 0;
   rx_data->pcu1.soc = 0;
-  rx_data->pcu1.system_status = CanRx_SystemStatus_Off;
+  rx_data->pcu1.system_status = CANRX__SYSTEM_STATUS_OFF;
   rx_data->pcu1.life_counter = 0;
 
   rx_data->pcu2.cell_voltage_bounds.min = 0;
   rx_data->pcu2.cell_voltage_bounds.max = 0;
   rx_data->pcu2.battery_temp_bounds.min = 0;
   rx_data->pcu2.battery_temp_bounds.max = 0;
-  rx_data->pcu2.tms_state = CanRx_TmsState_Off;
+  rx_data->pcu2.tms_state = CANRX__TMS_STATE_OFF;
 
   rx_data->pcu3.operation_state = 0;
   rx_data->pcu3.battery_state = 0;
-  rx_data->pcu3.term15_state = J1939_State_Passive;
-  rx_data->pcu3.term50_state = J1939_State_Passive;
+  rx_data->pcu3.term15_state = J1939__STATE_PASSIVE;
+  rx_data->pcu3.term50_state = J1939__STATE_PASSIVE;
   rx_data->pcu3.fuel_cell.state = 0;
   rx_data->pcu3.fuel_cell.output_power = 0;
   rx_data->pcu3.fuel_cell.temp = 0;

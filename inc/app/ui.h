@@ -6,16 +6,16 @@
 
 typedef enum Ui_IconState
 {
-  Ui_IconState_Passive
-  , Ui_IconState_Active
+  UI__ICON_STATE_PASSIVE
+  , UI__ICON_STATE_ACTIVE
 } Ui_IconState_t;
 
 typedef enum Ui_TmsState
 {
-  Ui_TmsState_Off = 1
-  , Ui_TmsState_Circulation = 2
-  , Ui_TmsState_Cooling = 3
-  , Ui_TmsState_Heating = 4
+  UI__TMS_STATE_OFF = 1
+  , UI__TMS_STATE_CIRCULATION = 2
+  , UI__TMS_STATE_COOLING = 3
+  , UI__TMS_STATE_HEATING = 4
 } Ui_TmsState_t;
 
 typedef struct Ui_Tank

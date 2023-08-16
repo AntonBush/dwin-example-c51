@@ -11,44 +11,44 @@ MUX_SEL = peripherals
 
 typedef enum Pio_Port
 {
-  Pio_Port_0
-  , Pio_Port_1
-  , Pio_Port_2
-  , Pio_Port_3
+  PIO__PORT_0
+  , PIO__PORT_1
+  , PIO__PORT_2
+  , PIO__PORT_3
 
-  , Pio_Port_CanTx = Pio_Port_0
-  , Pio_Port_CanRx = Pio_Port_0
+  , PIO__PORT_CAN_TX = PIO__PORT_0
+  , PIO__PORT_CAN_RX = PIO__PORT_0
 } Pio_Port_t;
 
 typedef enum Pio_Pin
 {
-  Pio_Pin_0 = Bits_Bit8_0
-  , Pio_Pin_1 = Bits_Bit8_1
-  , Pio_Pin_2 = Bits_Bit8_2
-  , Pio_Pin_3 = Bits_Bit8_3
+  PIO__PIN_0 = BITS__BIT8_0
+  , PIO__PIN_1 = BITS__BIT8_1
+  , PIO__PIN_2 = BITS__BIT8_2
+  , PIO__PIN_3 = BITS__BIT8_3
 
-  , Pio_Pin_4 = Bits_Bit8_4
-  , Pio_Pin_5 = Bits_Bit8_5
-  , Pio_Pin_6 = Bits_Bit8_6
-  , Pio_Pin_7 = Bits_Bit8_7
+  , PIO__PIN_4 = BITS__BIT8_4
+  , PIO__PIN_5 = BITS__BIT8_5
+  , PIO__PIN_6 = BITS__BIT8_6
+  , PIO__PIN_7 = BITS__BIT8_7
 
-  , Pio_Pin_CanTx = Pio_Pin_2
-  , Pio_Pin_CanRx = Pio_Pin_3
+  , PIO__PIN_CAN_TX = PIO__PIN_2
+  , PIO__PIN_CAN_RX = PIO__PIN_3
 } Pio_Pin_t;
 
 typedef enum Pio_PinMode
 {
-  Pio_PinMode_In
-  , Pio_PinMode_Out
+  PIO__PIN_MODE_IN
+  , PIO__PIN_MODE_OUT
 } Pio_PinMode_t;
 
 typedef enum Pio_Peripheral
 {
-  Pio_Peripheral_WdtFeedDog = Bits_Bit8_0
-  , Pio_Peripheral_WdtControl = Bits_Bit8_1
-  , Pio_Peripheral_Uart3 = Bits_Bit8_5
-  , Pio_Peripheral_Uart2 = Bits_Bit8_6
-  , Pio_Peripheral_Can = Bits_Bit8_7
+  PIO__PERIPHERAL_WDT_FEED_DOG = BITS__BIT8_0
+  , PIO__PERIPHERAL_WDT_CONTROL = BITS__BIT8_1
+  , PIO__PERIPHERAL_UART3 = BITS__BIT8_5
+  , PIO__PERIPHERAL_UART2 = BITS__BIT8_6
+  , PIO__PERIPHERAL_CAN = BITS__BIT8_7
 } Pio_Peripheral_t;
 
 void Pio_setPortMode(Pio_Port_t port, u8 mode);

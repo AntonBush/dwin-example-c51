@@ -12,19 +12,19 @@ void Pio_setPortMode(Pio_Port_t port, u8 mode)
 {
   switch (port)
   {
-    case Pio_Port_0:
+    case PIO__PORT_0:
       P0MDOUT = mode;
       break;
 
-    case Pio_Port_1:
+    case PIO__PORT_1:
       P1MDOUT = mode;
       break;
 
-    case Pio_Port_2:
+    case PIO__PORT_2:
       P2MDOUT = mode;
       break;
 
-    case Pio_Port_3:
+    case PIO__PORT_3:
       P3MDOUT = mode;
       break;
   }
@@ -34,7 +34,7 @@ void Pio_setPinModes(Pio_Port_t port, u8 pins, Pio_PinMode_t mode)
 {
   u8 old_mode = Pio_portMode(port);
   u8 new_mode
-    = mode == Pio_PinMode_Out
+    = mode == PIO__PIN_MODE_OUT
     ? old_mode | pins
     : old_mode & (~pins);
   Pio_setPortMode(port, new_mode);
@@ -44,7 +44,7 @@ void Pio_setPeripheralModes(u8 peripherals, Bits_State_t mode)
 {
   u8 old_mode = MUX_SEL;
   MUX_SEL
-    = mode == Bits_State_Set
+    = mode == BITS__STATE_SET
     ? old_mode | peripherals
     : old_mode & (~peripherals);
 }
@@ -53,16 +53,16 @@ u8 Pio_readPort(Pio_Port_t port)
 {
   switch (port)
   {
-    case Pio_Port_0:
+    case PIO__PORT_0:
       return P0;
 
-    case Pio_Port_1:
+    case PIO__PORT_1:
       return P1;
 
-    case Pio_Port_2:
+    case PIO__PORT_2:
       return P2;
 
-    case Pio_Port_3:
+    case PIO__PORT_3:
       return P3;
   }
   return 0;
@@ -77,19 +77,19 @@ void Pio_writePort(Pio_Port_t port, u8 state)
 {
   switch (port)
   {
-    case Pio_Port_0:
+    case PIO__PORT_0:
       P0 = state;
       break;
 
-    case Pio_Port_1:
+    case PIO__PORT_1:
       P1 = state;
       break;
 
-    case Pio_Port_2:
+    case PIO__PORT_2:
       P2 = state;
       break;
 
-    case Pio_Port_3:
+    case PIO__PORT_3:
       P3 = state;
       break;
   }
@@ -99,7 +99,7 @@ void Pio_writePins(Pio_Port_t port, u8 pins, Bits_State_t state)
 {
   u8 old_state = Pio_readPort(port);
   u8 new_state
-    = state == Bits_State_Set
+    = state == BITS__STATE_SET
     ? old_state | pins
     : old_state & (~pins);
   Pio_writePort(port, new_state);
@@ -111,16 +111,16 @@ u8 Pio_portMode(Pio_Port_t port)
 {
   switch (port)
   {
-    case Pio_Port_0:
+    case PIO__PORT_0:
       return P0MDOUT;
 
-    case Pio_Port_1:
+    case PIO__PORT_1:
       return P1MDOUT;
 
-    case Pio_Port_2:
+    case PIO__PORT_2:
       return P2MDOUT;
 
-    case Pio_Port_3:
+    case PIO__PORT_3:
       return P3MDOUT;
   }
   return 0;

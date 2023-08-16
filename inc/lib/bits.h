@@ -3,21 +3,21 @@
 
 typedef enum Bits_Bit8
 {
-  Bits_Bit8_0 = 1 << 0
-  , Bits_Bit8_1 = 1 << 1
-  , Bits_Bit8_2 = 1 << 2
-  , Bits_Bit8_3 = 1 << 3
+  BITS__BIT8_0 = 1 << 0
+  , BITS__BIT8_1 = 1 << 1
+  , BITS__BIT8_2 = 1 << 2
+  , BITS__BIT8_3 = 1 << 3
 
-  , Bits_Bit8_4 = 1 << 4
-  , Bits_Bit8_5 = 1 << 5
-  , Bits_Bit8_6 = 1 << 6
-  , Bits_Bit8_7 = 1 << 7
+  , BITS__BIT8_4 = 1 << 4
+  , BITS__BIT8_5 = 1 << 5
+  , BITS__BIT8_6 = 1 << 6
+  , BITS__BIT8_7 = 1 << 7
 } Bits_Bit8_t;
 
 typedef enum Bits_State
 {
-  Bits_State_NotSet
-  , Bits_State_Set
+  BITS__STATE_NOT_SET
+  , BITS__STATE_SET
 } Bits_State_t;
 
 #endif

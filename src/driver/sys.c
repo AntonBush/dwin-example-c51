@@ -6,18 +6,18 @@
 void Sys_init(void)
 {
 // Look to STARTUP.A51
-//  PAGESEL = Bits_Bit8_0;
-//  D_PAGESEL = Bits_Bit8_1;
+//  PAGESEL = BITS__BIT8_0;
+//  D_PAGESEL = BITS__BIT8_1;
 //  CKCON = 0;
 //  DPC = 0;
-//  T2CON = Bits_Bit8_6 | Bits_Bit8_5 | Bits_Bit8_4;
-//  PIO__SET_PERIPHERALS(Pio_Peripheral_Uart2 | Pio_Peripheral_Uart3);
+//  T2CON = BITS__BIT8_6 | BITS__BIT8_5 | BITS__BIT8_4;
+//  PIO__SET_PERIPHERALS(PIO__PERIPHERAL_UART2 | PIO__PERIPHERAL_UART3);
 //  RAMMODE = 0;
-//  PORTDRV = Bits_Bit8_0;
+//  PORTDRV = BITS__BIT8_0;
 //  IEN0 = 0;
 //  IEN1 = 0;
 //  IEN2 = 0;
 //  IP0 = 0;
 //  IP1 = 0;
-//  PSW &= ~(Bits_Bit8_4 | Bits_Bit8_3);
+//  PSW &= ~(BITS__BIT8_4 | BITS__BIT8_3);
 }

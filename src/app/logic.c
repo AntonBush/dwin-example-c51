@@ -48,9 +48,9 @@ void Logic_updateMainPage(Logic_Data_t *logic)
   float hv_discharge_power;
 
   ui->tank.valve_open
-    = rx->tank.valve_state == J1939_State_Active
-    ? Ui_IconState_Active
-    : Ui_IconState_Passive;
+    = rx->tank.valve_state == J1939__STATE_ACTIVE
+    ? UI__ICON_STATE_ACTIVE
+    : UI__ICON_STATE_PASSIVE;
   ui->tank.filling = round(rx->tank.filling);
   ui->tank.temp_bounds.min = rx->tank.temp_bounds.min;
   ui->tank.temp_bounds.max = rx->tank.temp_bounds.max;
@@ -71,20 +71,20 @@ void Logic_updateMainPage(Logic_Data_t *logic)
   }
   switch (rx->pcu2.tms_state)
   {
-    case CanRx_TmsState_Off:
-      ui->battery.tms_state = Ui_TmsState_Off;
+    case CANRX__TMS_STATE_OFF:
+      ui->battery.tms_state = UI__TMS_STATE_OFF;
       break;
 
-    case CanRx_TmsState_Cooling:
-      ui->battery.tms_state = Ui_TmsState_Cooling;
+    case CANRX__TMS_STATE_COOLING:
+      ui->battery.tms_state = UI__TMS_STATE_COOLING;
       break;
 
-    case CanRx_TmsState_Heating:
-      ui->battery.tms_state = Ui_TmsState_Heating;
+    case CANRX__TMS_STATE_HEATING:
+      ui->battery.tms_state = UI__TMS_STATE_HEATING;
       break;
 
-    case CanRx_TmsState_Circulation:
-      ui->battery.tms_state = Ui_TmsState_Circulation;
+    case CANRX__TMS_STATE_CIRCULATION:
+      ui->battery.tms_state = UI__TMS_STATE_CIRCULATION;
       break;
   }
   ui->battery.soc = round(rx->pcu1.soc);
@@ -100,8 +100,8 @@ void Logic_updateMainPage(Logic_Data_t *logic)
   ui->fuel_cell.state
     = rx->pcu3.fuel_cell.state == 1
       || rx->pcu3.fuel_cell.state == 2
-    ? Ui_IconState_Active
-    : Ui_IconState_Passive;
+    ? UI__ICON_STATE_ACTIVE
+    : UI__ICON_STATE_PASSIVE;
   ui->fuel_cell.output_power = round(rx->pcu3.fuel_cell.output_power);
   ui->fuel_cell.temp = rx->pcu3.fuel_cell.temp;
 

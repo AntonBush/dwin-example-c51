@@ -33,8 +33,8 @@ do {} while (APP_EN)
 
 typedef enum DgusVar_Mode
 {
-  DgusVar_Mode_Read = 1
-  , DgusVar_Mode_Write = 0
+  DGUSVAR__MODE_READ = 1
+  , DGUSVAR__MODE_WRITE = 0
 } DgusVar_Mode_t;
 
 u8 xdata DgusVar_RxBuffer[DGUSVAR__BUFFER_SIZE];
@@ -56,10 +56,10 @@ void DgusVar_read(u32 variable_address, u16 n_variables) small
 
   DGUSVAR__BEGIN_READ_WRITE();
 
-  if (variable_address & Bits_Bit8_0)
+  if (variable_address & BITS__BIT8_0)
   {
     DGUSVAR__SELECT_LAST_BYTES(2);
-    DGUSVAR__PERFORM_OPERATION(DgusVar_Mode_Read);
+    DGUSVAR__PERFORM_OPERATION(DGUSVAR__MODE_READ);
 
     DGUSVAR__WRITE_U8_TO_BUFFER(rx_buffer, DATA1);
     DGUSVAR__WRITE_U8_TO_BUFFER(rx_buffer, DATA0);
@@ -69,7 +69,7 @@ void DgusVar_read(u32 variable_address, u16 n_variables) small
   DGUSVAR__SELECT_FIRST_BYTES(4);
   for (; 1 < n_variables; n_variables -= 2)
   {
-    DGUSVAR__PERFORM_OPERATION(DgusVar_Mode_Read);
+    DGUSVAR__PERFORM_OPERATION(DGUSVAR__MODE_READ);
 
     DGUSVAR__WRITE_U8_TO_BUFFER(rx_buffer, DATA3);
     DGUSVAR__WRITE_U8_TO_BUFFER(rx_buffer, DATA2);
@@ -80,7 +80,7 @@ void DgusVar_read(u32 variable_address, u16 n_variables) small
   if (n_variables != 0)
   {
     DGUSVAR__SELECT_FIRST_BYTES(2);
-    DGUSVAR__PERFORM_OPERATION(DgusVar_Mode_Read);
+    DGUSVAR__PERFORM_OPERATION(DGUSVAR__MODE_READ);
 
     DGUSVAR__WRITE_U8_TO_BUFFER(rx_buffer, DATA3);
     DGUSVAR__WRITE_U8_TO_BUFFER(rx_buffer, DATA2);
@@ -105,13 +105,13 @@ void DgusVar_write(u32 variable_address, u16 n_variables) small
 
   DGUSVAR__BEGIN_READ_WRITE();
 
-  if (variable_address & Bits_Bit8_0)
+  if (variable_address & BITS__BIT8_0)
   {
     DATA1 = DGUSVAR__READ_U8_FROM_BUFFER(tx_buffer);
     DATA0 = DGUSVAR__READ_U8_FROM_BUFFER(tx_buffer);
 
     DGUSVAR__SELECT_LAST_BYTES(2);
-    DGUSVAR__PERFORM_OPERATION(DgusVar_Mode_Write);
+    DGUSVAR__PERFORM_OPERATION(DGUSVAR__MODE_WRITE);
 
     --n_variables;
   }
@@ -124,7 +124,7 @@ void DgusVar_write(u32 variable_address, u16 n_variables) small
     DATA1 = DGUSVAR__READ_U8_FROM_BUFFER(tx_buffer);
     DATA0 = DGUSVAR__READ_U8_FROM_BUFFER(tx_buffer);
 
-    DGUSVAR__PERFORM_OPERATION(DgusVar_Mode_Write);
+    DGUSVAR__PERFORM_OPERATION(DGUSVAR__MODE_WRITE);
   }
 
   if (n_variables != 0)
@@ -133,7 +133,7 @@ void DgusVar_write(u32 variable_address, u16 n_variables) small
     DATA2 = DGUSVAR__READ_U8_FROM_BUFFER(tx_buffer);
 
     DGUSVAR__SELECT_FIRST_BYTES(2);
-    DGUSVAR__PERFORM_OPERATION(DgusVar_Mode_Write);
+    DGUSVAR__PERFORM_OPERATION(DGUSVAR__MODE_WRITE);
   }
 
   DGUSVAR__END_READ_WRITE();
