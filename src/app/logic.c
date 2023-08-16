@@ -93,9 +93,9 @@ void Logic_updateMainPage(Logic_Data_t *logic)
   ui->battery.temp_bounds.max
     = rx->pcu2.battery_temp_bounds.max;
   ui->battery.voltage_bounds.min
-    = rx->pcu2.cell_voltage_bounds.min;
+    = round(rx->pcu2.cell_voltage_bounds.min);
   ui->battery.voltage_bounds.max
-    = rx->pcu2.cell_voltage_bounds.max;
+    = round(rx->pcu2.cell_voltage_bounds.max);
 
   ui->fuel_cell.state
     = rx->pcu3.fuel_cell.state == 1
