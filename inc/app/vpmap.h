@@ -2,7 +2,7 @@
 #define __VPMAP_H__
 
 // Tank
-// #define VPMAP__TANK_RESERVED 0x3000
+#define VPMAP__TANK_CAN_ERROR 0x3000
 // #define VPMAP__TANK_RESERVED 0x3002
 #define VPMAP__TANK_VALVE_OPEN 0x3004
 // #define VPMAP__TANK_RESERVED 0x3006

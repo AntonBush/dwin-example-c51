@@ -20,6 +20,7 @@ typedef enum Ui_TmsState
 
 typedef struct Ui_Tank
 {
+  Ui_IconState_t can_error;
   Ui_IconState_t valve_open;
 
   Ui_IconState_t balloon;

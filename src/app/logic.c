@@ -47,6 +47,10 @@ void Logic_updateMainPage(Logic_Data_t *logic)
   Ui_MainPage_t *ui = &(logic->ui);
   float hv_discharge_power;
 
+  ui->tank.can_error
+    = logic->rx_timeout == 0
+    ? UI__ICON_STATE_ACTIVE
+    : UI__ICON_STATE_PASSIVE;
   ui->tank.valve_open
     = rx->tank.valve_state == J1939__STATE_ACTIVE
     ? UI__ICON_STATE_ACTIVE

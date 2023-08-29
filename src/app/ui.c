@@ -5,6 +5,7 @@
 
 void Ui_init(Ui_MainPage_t *page)
 {
+  page->tank.can_error  = UI__ICON_STATE_PASSIVE;
   page->tank.valve_open = UI__ICON_STATE_PASSIVE;
 
   page->tank.balloon = UI__ICON_STATE_ACTIVE;
@@ -43,6 +44,8 @@ void Ui_init(Ui_MainPage_t *page)
 
 void Ui_update(Ui_MainPage_t *page)
 {
+  DgusVar_updateU16(VPMAP__TANK_CAN_ERROR, page->tank.can_error);
+
   DgusVar_updateU16(VPMAP__TANK_VALVE_OPEN, page->tank.valve_open);
 
   DgusVar_updateU16(VPMAP__TANK_BALLOON, page->tank.balloon);
