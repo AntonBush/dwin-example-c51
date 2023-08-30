@@ -102,13 +102,13 @@ void Logic_updateMainPage(Logic_Data_t *logic)
     = round(rx->pcu2.cell_voltage_bounds.max);
 
   ui->fuel_cell.state
-    = rx->pcu3.fuel_cell.state == 1
-      || rx->pcu3.fuel_cell.state == 2
+    = rx->pcu4.fuel_cell.state == CANRX__FUEL_CELL_STATE_POWER_OUTPUT
+      || rx->pcu4.fuel_cell.state == CANRX__FUEL_CELL_STATE_TURNING_OFF
     ? UI__ICON_STATE_ACTIVE
     : UI__ICON_STATE_PASSIVE;
-  ui->fuel_cell.output_power = round(rx->pcu3.fuel_cell.output_power);
-  ui->fuel_cell.temp = rx->pcu3.fuel_cell.temp;
+  ui->fuel_cell.output_power = round(rx->pcu4.fuel_cell.output_power);
+  ui->fuel_cell.temp = rx->pcu4.fuel_cell.temp;
 
-  ui->hed_rate.hydrogen = rx->pcu3.rate.hydrogen;
-  ui->hed_rate.energy = rx->pcu3.rate.energy;
+  ui->hed_rate.hydrogen = rx->pcu4.rate.hydrogen;
+  ui->hed_rate.energy = rx->pcu4.rate.energy;
 }

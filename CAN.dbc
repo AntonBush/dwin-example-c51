@@ -92,37 +92,38 @@ BO_ 3221225472 VECTOR__INDEPENDENT_SIG_MSG: 0 Vector__XXX
  SG_ NewSignal_0007 : 32|8@1+ (1,0) [0|0] "" Vector__XXX
 
 BO_ 2565909661 GasTankData: 8 PCU
- SG_ maxTankTemp : 0|8@1+ (1,0) [0|216] "deg" Vector__XXX
- SG_ minTankTemp : 8|8@1+ (1,0) [0|216] "deg" Vector__XXX
+ SG_ maxTankTemp : 0|8@1+ (1,-40) [0|216] "deg" Vector__XXX
+ SG_ minTankTemp : 8|8@1+ (1,-40) [0|216] "deg" Vector__XXX
  SG_ maxTankPrs : 16|16@1+ (1,0) [0|655] "Bar" Vector__XXX
  SG_ minTankPrs : 32|16@1+ (1,0) [0|655] "Bar" Vector__XXX
  SG_ tankFilling : 48|8@1+ (0.4,0) [0|0] "%" Vector__XXX
  SG_ valveState : 56|2@1+ (1,0) [0|0] "" Vector__XXX
  SG_ lifeCounter : 60|4@1+ (1,0) [0|15] "" Vector__XXX
 
-BO_ 2566889373 PCUMsg1: 8 PCU
+BO_ 2566899357 PCUMsg1: 8 PCU
  SG_ hvVoltage : 0|12@1+ (0.5,0) [0|1000] "V" Vector__XXX
- SG_ hvCurrent : 12|12@1+ (1,-2000) [-1500|1500] "A" Vector__XXX
+ SG_ hvCurrent : 12|12@1+ (1,-1500) [-1500|1500] "A" Vector__XXX
  SG_ hvMaxChCurrent : 24|12@1+ (1,0) [0|1500] "A" Vector__XXX
  SG_ hvMaxDischCurrent : 36|12@1+ (1,0) [0|1500] "A" Vector__XXX
  SG_ SOC : 48|8@1+ (0.4,0) [0|100] "%" Vector__XXX
  SG_ systemStatus : 56|4@1+ (1,0) [0|15] "" Vector__XXX
  SG_ lifeCounterPCU : 60|4@1+ (1,0) [0|0] "" Vector__XXX
 
-BO_ 2561081502 VCUMsg: 8 VCU
+BO_ 2561081347 VCUMsg: 8 VCU
  SG_ ignition : 0|2@1+ (1,0) [0|3] "" Vector__XXX
  SG_ emergencyStopReq : 2|2@1+ (1,0) [0|0] "" Vector__XXX
  SG_ powerReq : 8|12@1+ (1,-1500) [-1500|1500] "kW" Vector__XXX
  SG_ tractionCurrent : 20|12@1+ (1,-1500) [-1500|1500] "" Vector__XXX
 
-BO_ 2566893469 PCUMsg2: 8 VCU
+BO_ 2566899613 PCUMsg2: 8 VCU
  SG_ maxCellVoltage : 0|16@1+ (0.001,0) [0|0] "" Vector__XXX
  SG_ minCellVoltage : 16|16@1+ (0.001,0) [0|0] "" Vector__XXX
  SG_ maxBattTemp : 32|8@1+ (1,-40) [-40|215] "" Vector__XXX
  SG_ minBattTemp : 40|8@1+ (1,-40) [-40|215] "" Vector__XXX
  SG_ tmsState : 48|2@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ powerReqFB : 52|12@1+ (1,-1500) [0|0] "" Vector__XXX
 
-BO_ 2566838576 PCUMsg3: 8 PCU
+BO_ 2566838576 PCUMsg4: 8 PCU
  SG_ operationState : 0|4@1+ (1,0) [0|0] "" Vector__XXX
  SG_ batteryState : 4|4@1+ (1,0) [0|0] "" Vector__XXX
  SG_ fuelCellState : 20|4@1+ (1,0) [0|0] "" Vector__XXX
@@ -132,6 +133,32 @@ BO_ 2566838576 PCUMsg3: 8 PCU
  SG_ fuelCellOutputPower : 24|12@1+ (0.1,0) [0|0] "" Vector__XXX
  SG_ hydrogenRate : 48|8@1+ (1,0) [0|0] "" Vector__XXX
  SG_ energyRate : 56|8@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 2566899869 PCUMsg3: 8 PCU
+ SG_ hvMaxChCurrentPeak : 0|12@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ hvMaxDischCurrentPeak : 12|12@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 2566842672 PCUMsg5: 8 PCU
+ SG_ chNegRelayFB : 0|2@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ chPosRelayFB : 2|2@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ disNegRelayFB : 4|2@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ disPosRelayFB : 6|2@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ chRelayState : 8|3@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ disRelayState : 11|3@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ chPosRelayAdhasion : 16|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ chNegRelayAdhasion : 17|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ chPosRelayCannotBeClosed : 18|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ chNegRelayCannotBeClosed : 19|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ chPosRelayOpenWithoutReq : 20|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ chNegRelayOpenWithoutReq : 21|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ disPosRelayAdhasion : 24|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ disNegRelayAdhasion : 25|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ disPosRelayCannotBeClosed : 26|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ disNegRelayCannotBeClosed : 27|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ disPosRelayOpenWithoutReq : 28|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ disNegRelayOpenWithoutReq : 29|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ chRelayReq : 14|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ disRelayReq : 15|1@1+ (1,0) [0|0] "" Vector__XXX
 
 
 
@@ -146,16 +173,27 @@ CM_ SG_ 3221225472 E2V_FCSErrLvl "Documentation contains maximum=3, but acording
 CM_ SG_ 3221225472 E2V_OutputCrnt "Documentation contains type=Signed, but according to documentation offset=-1000 and minimum=-1000, which leads to the conclusion that type shall be Unsigned";
 CM_ SG_ 3221225472 DCL_Life "0~255 cycles";
 CM_ SG_ 2565909661 maxTankTemp "";
-CM_ SG_ 2566889373 hvVoltage "Current voltage of the high-voltage network";
-CM_ SG_ 2566889373 hvCurrent "Current current of the high-voltage network";
-CM_ SG_ 2566889373 hvMaxChCurrent "Maximum charge current";
-CM_ SG_ 2566889373 hvMaxDischCurrent "The maximum value of the discharge current";
-CM_ SG_ 2566889373 SOC "Traction Battery State of Charge";
-CM_ BO_ 2561081502 "";
-CM_ SG_ 2561081502 powerReq "Requested power";
+CM_ SG_ 2566899357 hvVoltage "Current voltage of the high-voltage network";
+CM_ SG_ 2566899357 hvCurrent "Current current of the high-voltage network";
+CM_ SG_ 2566899357 hvMaxChCurrent "Maximum charge current";
+CM_ SG_ 2566899357 hvMaxDischCurrent "The maximum value of the discharge current";
+CM_ SG_ 2566899357 SOC "Traction Battery State of Charge";
+CM_ BO_ 2561081347 "";
+CM_ SG_ 2561081347 powerReq "Requested power";
 VAL_ 2565909661 valveState 0 "closed" 1 "opened" 2 "error" 3 "notAvail" ;
-VAL_ 2566889373 systemStatus 0 "system is off" 1 "precharge" 2 "system is off" 3 "shutdown" 4 "power limit" 14 "error" 15 "NA" ;
-VAL_ 2561081502 ignition 0 "off" 1 "on" 2 "error" 3 "NA" ;
-VAL_ 2561081502 emergencyStopReq 0 "off" 1 "on" 2 "error" 3 "NA" ;
-VAL_ 2566893469 tmsState 0 "off" 1 "CoolingMode" 2 "HeatingMode" 3 "Circulation" ;
+VAL_ 2566899357 systemStatus 0 "system is off" 1 "precharge" 2 "system is off" 3 "shutdown" 4 "power limit" 5 "charging" 15 "NA" 16 "NewValue_0016" ;
+VAL_ 2561081347 ignition 0 "off" 1 "on" 2 "error" 3 "NA" ;
+VAL_ 2561081347 emergencyStopReq 0 "off" 1 "on" 2 "error" 3 "NA" ;
+VAL_ 2566899613 tmsState 0 "off" 1 "CoolingMode" 2 "HeatingMode" 3 "Circulation" ;
+VAL_ 2566838576 operationState 0 "off" 1 "ignitionOn" 2 "turningOn" 3 "loadTurningOn" 4 "batteryTurningOff" 5 "on" 6 "charging" ;
+VAL_ 2566838576 batteryState 0 "off" 1 "turningOn" 2 "on" 3 "turningOff" ;
+VAL_ 2566838576 fuelCellState 0 "off" 1 "powerOutput" 2 "turningOff" 3 "waitingBattery" ;
+VAL_ 2566842672 chNegRelayFB 0 "opened" 1 "closed" ;
+VAL_ 2566842672 chPosRelayFB 0 "opened" 1 "closed" ;
+VAL_ 2566842672 disNegRelayFB 0 "opened" 1 "closed" ;
+VAL_ 2566842672 disPosRelayFB 0 "opened" 1 "closed" ;
+VAL_ 2566842672 chRelayState 0 "opened" 1 "closing" 2 "closed" 3 "opening" 4 "fault" ;
+VAL_ 2566842672 disRelayState 0 "opened" 1 "closing" 2 "closed" 3 "opening" 4 "fault" ;
+VAL_ 2566842672 chRelayReq 0 "open" 1 "close" ;
+VAL_ 2566842672 disRelayReq 0 "open" 1 "close" ;
 

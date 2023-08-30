@@ -6,7 +6,7 @@ static void CanRx_recieveVcuMsg(CanRx_VcuMsg_t *rx_data, Can_Message_t *message)
 static void CanRx_recieveGasTankData(CanRx_GasTankData_t *rx_data, Can_Message_t *message);
 static void CanRx_recievePcuMsg1(CanRx_PcuMsg1_t *rx_data, Can_Message_t *message);
 static void CanRx_recievePcuMsg2(CanRx_PcuMsg2_t *rx_data, Can_Message_t *message);
-static void CanRx_recievePcuMsg3(CanRx_PcuMsg3_t *rx_data, Can_Message_t *message);
+static void CanRx_recievePcuMsg4(CanRx_PcuMsg4_t *rx_data, Can_Message_t *message);
 
 void CanRx_init(CanRx_Data_t *rx_data)
 {
@@ -36,16 +36,17 @@ void CanRx_init(CanRx_Data_t *rx_data)
   rx_data->pcu2.battery_temp_bounds.min = 0;
   rx_data->pcu2.battery_temp_bounds.max = 0;
   rx_data->pcu2.tms_state = CANRX__TMS_STATE_OFF;
+  rx_data->pcu2.power_req_fb = 0;
 
-  rx_data->pcu3.operation_state = 0;
-  rx_data->pcu3.battery_state = 0;
-  rx_data->pcu3.term15_state = J1939__STATE_PASSIVE;
-  rx_data->pcu3.term50_state = J1939__STATE_PASSIVE;
-  rx_data->pcu3.fuel_cell.state = 0;
-  rx_data->pcu3.fuel_cell.output_power = 0;
-  rx_data->pcu3.fuel_cell.temp = 0;
-  rx_data->pcu3.rate.hydrogen = 0;
-  rx_data->pcu3.rate.energy = 0;
+  rx_data->pcu4.operation_state = CANRX__OPERATION_STATE_OFF;
+  rx_data->pcu4.battery_state = CANRX__BATTERY_STATE_OFF;
+  rx_data->pcu4.term15_state = J1939__STATE_PASSIVE;
+  rx_data->pcu4.term50_state = J1939__STATE_PASSIVE;
+  rx_data->pcu4.fuel_cell.state = CANRX__FUEL_CELL_STATE_OFF;
+  rx_data->pcu4.fuel_cell.output_power = 0;
+  rx_data->pcu4.fuel_cell.temp = 0;
+  rx_data->pcu4.rate.hydrogen = 0;
+  rx_data->pcu4.rate.energy = 0;
 }
 
 void CanRx_recieve(CanRx_Data_t *rx_data, Can_Message_t *message)
@@ -66,9 +67,9 @@ void CanRx_recieve(CanRx_Data_t *rx_data, Can_Message_t *message)
   {
     CanRx_recievePcuMsg2(&(rx_data->pcu2), message);
   }
-  else if (message->id == CANRX__PCU_MSG_3_ID)
+  else if (message->id == CANRX__PCU_MSG_4_ID)
   {
-    CanRx_recievePcuMsg3(&(rx_data->pcu3), message);
+    CanRx_recievePcuMsg4(&(rx_data->pcu4), message);
   }
 }
 
@@ -91,8 +92,8 @@ void CanRx_recieveVcuMsg(CanRx_VcuMsg_t *rx_data, Can_Message_t *message)
 
 void CanRx_recieveGasTankData(CanRx_GasTankData_t *rx_data, Can_Message_t *message)
 {
-  rx_data->temp_bounds.max = ByteVector_regularParameter(message->bytes, 8, 0);
-  rx_data->temp_bounds.min = ByteVector_regularParameter(message->bytes, 8, 1);
+  rx_data->temp_bounds.max = ByteVector_regularParameter(message->bytes, 8, 0) - 40;
+  rx_data->temp_bounds.min = ByteVector_regularParameter(message->bytes, 8, 1) - 40;
   rx_data->prs_bounds.max = ByteVector_regularParameter(message->bytes, 16, 1);
   rx_data->prs_bounds.min = ByteVector_regularParameter(message->bytes, 16, 2);
 
@@ -104,7 +105,7 @@ void CanRx_recieveGasTankData(CanRx_GasTankData_t *rx_data, Can_Message_t *messa
 void CanRx_recievePcuMsg1(CanRx_PcuMsg1_t *rx_data, Can_Message_t *message)
 {
   rx_data->hv.voltage = 0.5F * ByteVector_regularParameter(message->bytes, 12, 0);
-  rx_data->hv.current = ByteVector_regularParameter(message->bytes, 12, 1) - 2000;
+  rx_data->hv.current = ByteVector_regularParameter(message->bytes, 12, 1) - 1500;
   rx_data->hv.max_charge_current = ByteVector_regularParameter(message->bytes, 12, 2);
   rx_data->hv.max_discharge_current = ByteVector_regularParameter(message->bytes, 12, 3);
 
@@ -120,9 +121,10 @@ void CanRx_recievePcuMsg2(CanRx_PcuMsg2_t *rx_data, Can_Message_t *message)
   rx_data->battery_temp_bounds.max = ByteVector_regularParameter(message->bytes, 8, 4) - 40;
   rx_data->battery_temp_bounds.min = ByteVector_regularParameter(message->bytes, 8, 5) - 40;
   rx_data->tms_state = ByteVector_regularParameter(message->bytes, 2, 24);
+  rx_data->power_req_fb = ByteVector_parameter(message->bytes, 12, 52);
 }
 
-void CanRx_recievePcuMsg3(CanRx_PcuMsg3_t *rx_data, Can_Message_t *message)
+void CanRx_recievePcuMsg4(CanRx_PcuMsg4_t *rx_data, Can_Message_t *message)
 {
   rx_data->operation_state = ByteVector_regularParameter(message->bytes, 4, 0);
   rx_data->battery_state = ByteVector_regularParameter(message->bytes, 4, 1);

@@ -26,8 +26,8 @@ typedef struct Ui_Tank
   Ui_IconState_t balloon;
   u16 filling;
 
-  Bounds_U16Bounds_t temp_bounds;
-  Bounds_U16Bounds_t prs_bounds;
+  Bounds_S16Bounds_t temp_bounds;
+  Bounds_S16Bounds_t prs_bounds;
 } Ui_Tank_t;
 
 typedef struct Ui_Battery
