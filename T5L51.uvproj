@@ -427,6 +427,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\app\ui.c</FilePath>
             </File>
+            <File>
+              <FileName>uimain.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\app\uimain.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

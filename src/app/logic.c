@@ -30,21 +30,33 @@ void Logic_update(Logic_Data_t *logic)
 {
   if (logic->rx_timeout == 0)
   {
+    Ui_Page_t p = logic->ui.current_page;
     Logic_init(logic);
+    logic->ui.current_page = p;
   }
   else
   {
     logic->rx_timeout -= 1;
+    logic->ui.current_page = logic->rx.pcu4.operation_state == CANRX__OPERATION_STATE_OFF
+      ? UI__PAGE_BACKGROUND
+      : UI__PAGE_MAIN;
   }
 
-  Logic_updateMainPage(logic);
+  switch (logic->ui.current_page)
+  {
+  case UI__PAGE_BACKGROUND:
+    break;
+  case UI__PAGE_MAIN:
+    Logic_updateMainPage(logic);
+    break;
+  }
   SYS__INTERRUPT_GUARD(Ui_update(&(logic->ui)));
 }
 
 void Logic_updateMainPage(Logic_Data_t *logic)
 {
-  CanRx_Data_t *rx = &(logic->rx);
-  Ui_MainPage_t *ui = &(logic->ui);
+  CanRx_Data_t * const rx = &(logic->rx);
+  UiMain_Data_t * const ui = &(logic->ui.main_page);
   float hv_discharge_power;
 
   ui->tank.can_error
@@ -60,8 +72,8 @@ void Logic_updateMainPage(Logic_Data_t *logic)
   ui->tank.temp_bounds.max = rx->tank.temp_bounds.max;
   ui->tank.prs_bounds = rx->tank.prs_bounds;
 
-  logic->ui.battery.hv.voltage = round(logic->rx.pcu1.hv.voltage);
-  logic->ui.battery.hv.current = logic->rx.pcu1.hv.current;
+  ui->battery.hv.voltage = round(logic->rx.pcu1.hv.voltage);
+  ui->battery.hv.current = logic->rx.pcu1.hv.current;
   hv_discharge_power = round(rx->pcu1.hv.voltage * rx->pcu1.hv.current / 1000);
   if (hv_discharge_power < 0)
   {
@@ -76,19 +88,19 @@ void Logic_updateMainPage(Logic_Data_t *logic)
   switch (rx->pcu2.tms_state)
   {
     case CANRX__TMS_STATE_OFF:
-      ui->battery.tms_state = UI__TMS_STATE_OFF;
+      ui->battery.tms_state = UIMAIN__TMS_STATE_OFF;
       break;
 
     case CANRX__TMS_STATE_COOLING:
-      ui->battery.tms_state = UI__TMS_STATE_COOLING;
+      ui->battery.tms_state = UIMAIN__TMS_STATE_COOLING;
       break;
 
     case CANRX__TMS_STATE_HEATING:
-      ui->battery.tms_state = UI__TMS_STATE_HEATING;
+      ui->battery.tms_state = UIMAIN__TMS_STATE_HEATING;
       break;
 
     case CANRX__TMS_STATE_CIRCULATION:
-      ui->battery.tms_state = UI__TMS_STATE_CIRCULATION;
+      ui->battery.tms_state = UIMAIN__TMS_STATE_CIRCULATION;
       break;
   }
   ui->battery.soc = round(rx->pcu1.soc);

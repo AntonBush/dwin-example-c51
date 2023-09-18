@@ -10,7 +10,7 @@ typedef struct Logic_Data
 {
   u32 rx_timeout;
   CanRx_Data_t rx;
-  Ui_MainPage_t ui;
+  Ui_Data_t ui;
 } Logic_Data_t;
 
 void Logic_init(Logic_Data_t *logic);
